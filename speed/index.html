@@ -309,7 +309,7 @@ const HALF = 0.018; // ~2 km each side
 async function fetchWays(lat, lon){
   if (st.fetching || Date.now() < st.nextFetch) return; st.fetching = true; setDot('dMap','wait'); D.fetches++;
   const s=lat-HALF, n=lat+HALF, w=lon-HALF, e=lon+HALF;
-  const hw = '^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$';
+  const hw = '^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|unclassified|residential|living_street)$';
   const q = `[out:json][timeout:25];way["highway"~"${hw}"](${s},${w},${n},${e});out tags geom;`;
   for (const ep of ENDPOINTS){
     try{
