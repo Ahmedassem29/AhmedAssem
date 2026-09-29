@@ -1,0 +1,375 @@
+import SwiftUI
+
+extension Color {
+    init(hex: UInt32) {
+        self.init(red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
+    }
+    static let bg = Color(hex: 0x0A0E11)
+    static let panel = Color(hex: 0x141A1F)
+    static let line = Color(hex: 0x232C33)
+    static let fg = Color(hex: 0xEEF2F3)
+    static let muted = Color(hex: 0x86939A)
+    static let ok = Color(hex: 0x2FD27A)
+    static let warn = Color(hex: 0xFFB020)
+    static let danger = Color(hex: 0xFF3B3B)
+    static let signRed = Color(hex: 0xD71920)
+}
+
+@main
+struct SpeedDropApp: App {
+    @StateObject private var model = DriveModel()
+    @Environment(\.scenePhase) private var scenePhase
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .environmentObject(model)
+                .environment(\.layoutDirection, model.lang.isRTL ? .rightToLeft : .leftToRight)
+                .environment(\.locale, Locale(identifier: model.lang.rawValue))
+                .preferredColorScheme(.dark)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { model.tripStore.save() }
+        }
+    }
+}
+
+struct RootView: View {
+    @EnvironmentObject var model: DriveModel
+    var body: some View {
+        ZStack {
+            if model.running { DriveView() } else { StartView() }
+        }
+        .animation(.easeInOut(duration: 0.2), value: model.running)
+    }
+}
+
+// MARK: - Start
+
+struct StartView: View {
+    @EnvironmentObject var model: DriveModel
+    @State private var showTrips = false
+    var body: some View {
+        let t = model.t
+        VStack(alignment: .leading, spacing: 22) {
+            Spacer()
+            Picker(t.languageLabel, selection: $model.lang) {
+                Text("العربية").tag(AppLang.ar)
+                Text("English").tag(AppLang.en)
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 260)
+
+            Text(t.headline).font(.system(size: 34, weight: .bold))
+            Text(t.intro).font(.body).foregroundStyle(Color.muted).lineSpacing(5)
+
+            Button { model.start() } label: {
+                Text(t.start).font(.title2.bold()).frame(maxWidth: .infinity).padding(.vertical, 18)
+            }
+            .buttonStyle(.plain)
+            .background(Color.ok, in: RoundedRectangle(cornerRadius: 18))
+            .foregroundStyle(Color(hex: 0x03210F))
+
+            Button { model.runDemo() } label: {
+                Text(t.demo).font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
+            }
+            .buttonStyle(.plain)
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.line))
+            .foregroundStyle(Color.fg)
+
+            Button { showTrips = true } label: {
+                Text(t.tripsLong).font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
+            }
+            .buttonStyle(.plain)
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.line))
+            .foregroundStyle(Color.fg)
+            Spacer()
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.bg.ignoresSafeArea())
+        .foregroundStyle(Color.fg)
+        .sheet(isPresented: $showTrips) {
+            TripsView(store: model.tripStore).environmentObject(model)
+                .environment(\.layoutDirection, model.lang.isRTL ? .rightToLeft : .leftToRight)
+        }
+    }
+}
+
+// MARK: - Drive
+
+struct DriveView: View {
+    @EnvironmentObject var model: DriveModel
+    @State private var showSettings = false
+    @State private var showTrips = false
+    @AppStorage("showMap") private var showMap = false
+    @State private var flashing = false
+    @State private var pop = false
+
+    private let chips = [40, 60, 80, 100, 110, 120, 140]
+
+    var body: some View {
+        let t = model.t
+        VStack(spacing: 14) {
+            // top bar: status dots on one side, one row of equal icon buttons on the other
+            HStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    statusIcon("location.fill", model.gps)
+                    statusIcon("road.lanes", model.road)
+                }
+                Spacer(minLength: 4)
+                BarButton(icon: "character.bubble", label: model.lang == .ar ? "EN" : "ع") {
+                    model.lang = model.lang == .ar ? .en : .ar
+                }
+                BarButton(icon: showMap ? "gauge.with.needle" : "map", label: showMap ? t.gauge : t.map, selected: showMap) {
+                    withAnimation { showMap.toggle() }
+                }
+                BarButton(icon: "clock.arrow.circlepath", label: t.trips) { showTrips = true }
+                BarButton(icon: "gearshape", label: t.settings) { showSettings = true }
+            }
+
+            if showMap {
+                DriveMapPanel(pop: pop)
+                    .frame(maxHeight: .infinity)
+            } else {
+                Spacer(minLength: 0)
+
+                // speed + sign
+                HStack(alignment: .center) {
+                    VStack(spacing: 6) {
+                        Text("\(model.speed)")
+                            .font(.system(size: 150, weight: .heavy, design: .default))
+                            .fontWidth(.condensed)
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.5)
+                            .lineLimit(1)
+                            .foregroundStyle(speedColor)
+                        Text(t.yourSpeed).font(.subheadline).foregroundStyle(Color.muted)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    VStack(spacing: 10) {
+                        ZStack {
+                            Circle().fill(Color.white)
+                            Circle().strokeBorder(Color.signRed, lineWidth: 16)
+                            Text(model.effectiveLimit.map(String.init) ?? "–")
+                                .font(.system(size: 64, weight: .heavy))
+                                .fontWidth(.condensed)
+                                .monospacedDigit()
+                                .foregroundStyle(Color.black)
+                                .minimumScaleFactor(0.5)
+                                .padding(18)
+                        }
+                        .frame(width: 140, height: 140)
+                        .opacity(model.limitIsStale ? 0.45 : 1)
+                        .scaleEffect(pop ? 1.12 : 1)
+
+                        HStack(spacing: 4) {
+                            Text(t.allowedTo).foregroundStyle(Color.muted)
+                            Text(model.allowed.map(String.init) ?? "–").font(.title3.bold()).monospacedDigit()
+                        }
+                        .font(.subheadline)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            // status strip
+            Text(statusText)
+                .font(.title3.bold())
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14).padding(.horizontal, 16)
+                .background(stripBackground, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(stripBorder))
+                .foregroundStyle(stripForeground)
+
+            // manual limit
+            VStack(alignment: .leading, spacing: 8) {
+                Text(t.manualLabel).font(.caption).foregroundStyle(Color.muted)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        Button(t.auto) { model.manualLimit = nil }
+                            .buttonStyle(Chip(selected: model.manualLimit == nil))
+                        ForEach(chips, id: \.self) { c in
+                            Button("\(c)") { model.manualLimit = c }
+                                .buttonStyle(Chip(selected: model.manualLimit == c, numeric: true))
+                        }
+                    }
+                }
+            }
+
+            Button { model.stop() } label: {
+                Text(t.stop).font(.headline).frame(maxWidth: .infinity).padding(.vertical, 12)
+            }
+            .buttonStyle(.plain)
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.line))
+        }
+        .padding(16)
+        .foregroundStyle(Color.fg)
+        .background(background.ignoresSafeArea())
+        .sheet(isPresented: $showSettings) { SettingsView().environmentObject(model)
+                .environment(\.layoutDirection, model.lang.isRTL ? .rightToLeft : .leftToRight)
+                .presentationDetents([.medium, .large]) }
+        .sheet(isPresented: $showTrips) {
+            TripsView(store: model.tripStore).environmentObject(model)
+                .environment(\.layoutDirection, model.lang.isRTL ? .rightToLeft : .leftToRight)
+        }
+        .alert(t.locationDenied, isPresented: .constant(model.locationDenied && model.running)) {
+            Button(t.settings) { if let u = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(u) } }
+            Button(t.stop, role: .cancel) { model.stop() }
+        }
+        .onChange(of: model.flashCount) { flash() }
+        .onChange(of: model.limitPulse) {
+            withAnimation(.spring(duration: 0.2)) { pop = true }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 350_000_000)
+                withAnimation { pop = false }
+            }
+        }
+    }
+
+    // MARK: pieces
+
+    private func statusIcon(_ name: String, _ s: Signal) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(color(s))
+            .frame(width: 32, height: 32)
+            .background(Color.panel, in: Circle())
+            .overlay(Circle().stroke(Color.line))
+    }
+
+    private func dot(_ label: String, _ s: Signal) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(color(s)).frame(width: 8, height: 8)
+            Text(label)
+        }
+    }
+
+    private func color(_ s: Signal) -> Color {
+        switch s { case .idle: .muted; case .ok: .ok; case .waiting: .warn; case .bad: .danger }
+    }
+
+    private var statusText: String {
+        let t = model.t
+        switch model.status {
+        case .waiting: return t.waitingGPS
+        case .noLimit: return t.noLimit
+        case .ok: return t.withinLimit
+        case .inMargin: return t.inMargin(model.allowed ?? 0)
+        case .over: return t.over(model.effectiveLimit ?? 0, model.speed)
+        }
+    }
+
+    private var speedColor: Color {
+        switch model.status { case .over: .danger; case .inMargin: .warn; case .ok: .ok; default: .fg }
+    }
+    private var stripBackground: Color {
+        switch model.status { case .over: .danger; case .inMargin: .warn; default: .panel }
+    }
+    private var stripBorder: Color {
+        switch model.status { case .over: .danger; case .inMargin: .warn; default: .line }
+    }
+    private var stripForeground: Color {
+        switch model.status { case .over: .white; case .inMargin: Color(hex: 0x1A1200); case .ok: .ok; default: .fg }
+    }
+    private var background: Color {
+        if flashing { return Color(hex: 0x8A1116) }
+        return model.status == .over ? Color(hex: 0x3A0B0D) : .bg
+    }
+
+    private func flash() {
+        Task { @MainActor in
+            for _ in 0..<4 {
+                withAnimation(.easeInOut(duration: 0.25)) { flashing = true }
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                withAnimation(.easeInOut(duration: 0.25)) { flashing = false }
+                try? await Task.sleep(nanoseconds: 250_000_000)
+            }
+        }
+    }
+}
+
+/// Top-bar button: icon on top, one short label under it, never wraps.
+struct BarButton: View {
+    let icon: String
+    let label: String
+    var selected = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 3) {
+                Image(systemName: icon).font(.system(size: 17, weight: .semibold))
+                Text(label)
+                    .font(.system(size: 10, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(width: 58, height: 50)
+            .background(selected ? Color.fg : Color.panel, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Color.fg : Color.line))
+            .foregroundStyle(selected ? Color.bg : Color.fg)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+}
+
+struct Chip: ButtonStyle {
+    var selected = false
+    var numeric = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(numeric ? .system(size: 17, weight: .bold).width(.condensed) : .system(size: 14, weight: .semibold))
+            .padding(.horizontal, 14).padding(.vertical, 9)
+            .background(selected ? Color.fg : Color.panel, in: Capsule())
+            .overlay(Capsule().stroke(selected ? Color.fg : Color.line))
+            .foregroundStyle(selected ? Color.bg : Color.fg)
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
+
+// MARK: - Settings
+
+struct SettingsView: View {
+    @EnvironmentObject var model: DriveModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        let t = model.t
+        NavigationStack {
+            Form {
+                Section(t.languageLabel) {
+                    Picker(t.languageLabel, selection: $model.lang) {
+                        Text("العربية").tag(AppLang.ar)
+                        Text("English").tag(AppLang.en)
+                    }.pickerStyle(.segmented)
+                }
+                Section {
+                    Picker(t.toleranceLabel, selection: $model.tolerance) {
+                        Text(t.none).tag(0)
+                        Text("+10").tag(10)
+                        Text("+15").tag(15)
+                        Text("+20").tag(20)
+                    }.pickerStyle(.segmented)
+                } header: { Text(t.toleranceLabel) } footer: { Text(t.toleranceNote) }
+                Section(t.soundLabel) {
+                    Picker(t.soundLabel, selection: $model.voiceMode) {
+                        ForEach(VoiceMode.allCases) { Text(t.voiceMode($0)).tag($0) }
+                    }.pickerStyle(.segmented)
+                    Toggle(t.anyChangeLabel, isOn: $model.alertOnAnyChange)
+                    Button(t.testAlert) { model.testAlert() }
+                }
+                Section {
+                    Toggle(t.keepScreenOn, isOn: $model.keepScreenOn)
+                }
+            }
+            .navigationTitle(t.settings)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(t.done) { dismiss() } } }
+        }
+        .preferredColorScheme(.dark)
+    }
+}
