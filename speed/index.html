@@ -203,7 +203,7 @@ const TX = {
   tripsTitle:'سجل الرحلات',noTrips:'لسه مفيش رحلات. أول ما تدوس ابدأ وتتحرك، الرحلة هتتسجّل هنا.<br>السجل محفوظ على الموبايل ده بس.',
   started:'البداية',ended:'النهاية',duration:'المدة',distance:'المسافة',maxSpeed:'أعلى سرعة',alerts:'تنبيهات السرعة',
   roadsLbl:'الطرق',noRoads:'مفيش أسماء طرق متسجّلة',delTrip:'امسح الرحلة',delAll:'امسح الكل',sure:'متأكد؟ دوس تاني',
-  km:'كم',min:'د',hr:'س',ongoing:'جارية الآن',noMap:'الخريطة محتاجة إنترنت',sayOver:(s,m)=>`انتبه، إنت ماشي ${s}. المسموح ${m}`,
+  km:'كم',min:'د',hr:'س',share:'شارك الرحلة',shared:'اتنسخت تفاصيل الرحلة، الصقها في أي رسالة',tripOf:'رحلة',route:'المسار',ongoing:'جارية الآن',noMap:'الخريطة محتاجة إنترنت',sayOver:(s,m)=>`انتبه، إنت ماشي ${s}. المسموح ${m}`,
   locOff:'الموقع مقفول. فعّله من الإعدادات ← الخصوصية ← خدمات الموقع ← Safari',locErr:'مش قادر يجيب الموقع، جرّب تاني',
   demoEnd:'خلصت التجربة. اعمل Reload للصفحة وابدأ'},
  en:{map:'Road data',screen:'Screen',settings:'Settings',yourSpeed:'Your speed km/h',allowedTo:'Allowed up to',
@@ -219,7 +219,7 @@ const TX = {
   tripsTitle:'Trip history',noTrips:'No trips yet. Press Start and drive; the trip is saved here.<br>History is stored on this phone only.',
   started:'Start',ended:'End',duration:'Duration',distance:'Distance',maxSpeed:'Top speed',alerts:'Speed alerts',
   roadsLbl:'Roads',noRoads:'No road names recorded',delTrip:'Delete trip',delAll:'Delete all',sure:'Sure? Tap again',
-  km:'km',min:'min',hr:'h',ongoing:'In progress',noMap:'The map needs internet',sayOver:(s,m)=>`Warning, you are at ${s}. Allowed ${m}`,
+  km:'km',min:'min',hr:'h',share:'Share trip',shared:'Trip details copied, paste them in any message',tripOf:'Trip',route:'Route',ongoing:'In progress',noMap:'The map needs internet',sayOver:(s,m)=>`Warning, you are at ${s}. Allowed ${m}`,
   locOff:'Location is off. Turn it on in Settings > Privacy > Location Services > Safari',locErr:'Could not get your location, try again',
   demoEnd:'Demo finished. Reload the page to start'}
 };
@@ -683,7 +683,7 @@ function showTrip(id){
   del.onclick = ()=> armDelete(del, t('delTrip'), ()=>{ store.set('trips', loadTrips().filter(x=>x.id!==id)); if (trip && trip.id===id) trip = null; showTripList(); });
   const p0 = tr.pts[0], p1 = tr.pts[tr.pts.length-1];
   const body = $('tripsBody');
-  body.innerHTML = `<div id="tripMap"></div>
+  body.innerHTML = `<button class="big" id="btnShare" type="button">${t('share')}</button><div class="note" id="shareNote" hidden></div><div id="tripMap"></div>
     <div class="kv">
       <span>${t('started')}</span><div>${fmtTime(tr.start)} · <a href="${mapsLink(p0)}" target="_blank" rel="noopener" dir="ltr">${p0[0]}, ${p0[1]}</a></div>
       <span>${t('ended')}</span><div>${fmtTime(tr.end)} · <a href="${mapsLink(p1)}" target="_blank" rel="noopener" dir="ltr">${p1[0]}, ${p1[1]}</a></div>
@@ -694,6 +694,7 @@ function showTrip(id){
     </div>
     <span class="lbl">${t('roadsLbl')}</span>
     <div class="roads">${(tr.roads||[]).length ? tr.roads.map(r=>`<div><span>${fmtTime(r.t)} · ${r.n.replace(/[<>&]/g,'')}</span><b>${r.l ?? ''}</b></div>`).join('') : `<div class="empty">${t('noRoads')}</div>`}</div>`;
+  $('btnShare').onclick = ()=> shareTrip(tr);
   if (!window.L){ $('tripMap').innerHTML = `<div class="empty">${t('noMap')}</div>`; return; }
   tripMap = L.map('tripMap', {attributionControl: true, zoomControl: true});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(tripMap);
@@ -701,6 +702,38 @@ function showTrip(id){
   L.circleMarker(p0, {radius:8, color:'#fff', fillColor:'#2fd27a', fillOpacity:1, weight:2}).addTo(tripMap);
   L.circleMarker(p1, {radius:8, color:'#fff', fillColor:'#ff3b3b', fillOpacity:1, weight:2}).addTo(tripMap);
   tripMap.fitBounds(line.getBounds(), {padding:[20,20]});
+}
+
+/* share: only when the person holding the phone taps the button */
+function tripText(tr){
+  const p0 = tr.pts[0], p1 = tr.pts[tr.pts.length-1];
+  const roads = (tr.roads||[]).map(r=>`• ${fmtTime(r.t)} ${r.n}${r.l ? ' ('+r.l+')' : ''}`).join('\n');
+  return `${t('tripOf')} ${fmtDate(tr.start)}
+${t('started')}: ${fmtTime(tr.start)} — ${mapsLink(p0)}
+${t('ended')}: ${fmtTime(tr.end)} — ${mapsLink(p1)}
+${t('duration')}: ${fmtDur(tr.end-tr.start)} · ${t('distance')}: ${fmtKm(tr.dist)}
+${t('maxSpeed')}: ${tr.max} · ${t('alerts')}: ${tr.alerts||0}
+${roads ? t('roadsLbl')+':\n'+roads : ''}`.trim();
+}
+function tripGPX(tr){
+  const pts = tr.pts.map(p=>`<trkpt lat="${p[0]}" lon="${p[1]}"><time>${new Date(p[2]).toISOString()}</time></trkpt>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="SpeedDrop" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>${t('tripOf')} ${new Date(tr.start).toISOString()}</name><trkseg>${pts}</trkseg></trk></gpx>`;
+}
+async function shareTrip(tr){
+  const text = tripText(tr);
+  const title = `${t('tripOf')} ${fmtDate(tr.start)}`;
+  try{
+    if (navigator.share){
+      let data = {title, text};
+      try{
+        const file = new File([tripGPX(tr)], `trip-${new Date(tr.start).toISOString().slice(0,16).replace(/[:T]/g,'-')}.gpx`, {type:'application/gpx+xml'});
+        if (navigator.canShare && navigator.canShare({files:[file]})) data.files = [file];
+      }catch(e){}
+      await navigator.share(data);
+      return;
+    }
+  }catch(e){ if (e && e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(text); const n = $('shareNote'); n.textContent = t('shared'); n.hidden = false; }catch(e){}
 }
 
 /* ---------- start ---------- */
