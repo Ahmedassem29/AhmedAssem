@@ -198,15 +198,44 @@ const st = {
   lastOverBeep: 0, lastOverSay: 0, wasOver: false, demo: false
 };
 
-/* ---------- audio ---------- */
+/* ---------- audio ----------
+   iPhone mutes Web Audio when the side switch is on Silent and can suspend it
+   when CarPlay/Waze take the audio. So beeps play through one <audio> element
+   (unlocked by the Start tap, not affected by the Silent switch), with Web
+   Audio only as a fallback. */
 let ac = null;
+const player = new Audio(); player.preload = 'auto'; player.setAttribute('playsinline','');
+const wavCache = {};
+function wavURL(freq, dur, n, gap){
+  const key = [freq,dur,n,gap].join('_'); if (wavCache[key]) return wavCache[key];
+  const rate = 22050, on = Math.round(dur*rate), off = Math.round(gap*rate), fade = Math.round(.008*rate);
+  const total = n*(on+off), buf = new ArrayBuffer(44 + total*2), v = new DataView(buf);
+  const str = (o,t)=>{ for (let i=0;i<t.length;i++) v.setUint8(o+i, t.charCodeAt(i)); };
+  str(0,'RIFF'); v.setUint32(4,36+total*2,true); str(8,'WAVE'); str(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true); v.setUint32(24,rate,true);
+  v.setUint32(28,rate*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true); str(36,'data'); v.setUint32(40,total*2,true);
+  let p = 44;
+  for (let k=0;k<n;k++){
+    for (let i=0;i<on;i++){
+      let x = freq ? ((i*freq/rate)%1 < .5 ? 1 : -1) : 0;
+      const e = Math.min(i, on-1-i); if (e < fade) x *= e/fade;
+      v.setInt16(p, x*0.6*32767, true); p += 2;
+    }
+    for (let i=0;i<off;i++){ v.setInt16(p, 0, true); p += 2; }
+  }
+  return (wavCache[key] = URL.createObjectURL(new Blob([buf], {type:'audio/wav'})));
+}
+let audioReady = false;
 function unlockAudio(){
   try{ if (navigator.audioSession) navigator.audioSession.type = 'playback'; }catch(e){}
+  // Real, audible confirmation beep inside the tap: this is what unlocks the element on iPhone.
+  try{ player.src = wavURL(660,.1,1,.05); const p = player.play(); if (p && p.then) p.then(()=>{audioReady=true;}).catch(()=>{}); else audioReady = true; }catch(e){}
   try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); ac.resume(); }catch(e){}
-  try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }catch(e){}
+  try{ const u = new SpeechSynthesisUtterance(S.lang==='ar' ? 'التنبيه شغّال' : 'Alerts on'); u.lang = S.lang==='ar'?'ar-SA':'en-US'; if (arVoice) u.voice = arVoice; speechSynthesis.speak(u); }catch(e){}
 }
-function beep(freq=880, dur=.16, n=3, gap=.1){
-  if (!ac || S.voice==='off') return;
+function webAudioBeep(freq, dur, n, gap){
+  if (!ac) return;
+  try{ if (ac.state !== 'running') ac.resume(); }catch(e){}
   let t = ac.currentTime + .02;
   for (let i=0;i<n;i++){
     const o = ac.createOscillator(), g = ac.createGain();
@@ -216,6 +245,14 @@ function beep(freq=880, dur=.16, n=3, gap=.1){
     t += dur+gap;
   }
 }
+function beep(freq=880, dur=.16, n=3, gap=.1){
+  if (S.voice==='off') return;
+  try{
+    player.pause(); player.src = wavURL(freq,dur,n,gap); player.currentTime = 0;
+    const p = player.play();
+    if (p && p.catch) p.catch(()=> webAudioBeep(freq,dur,n,gap));
+  }catch(e){ webAudioBeep(freq,dur,n,gap); }
+}
 let arVoice = null;
 function pickVoice(){
   try{ const vs = speechSynthesis.getVoices(); arVoice = S.lang==='ar' ? (vs.find(v=>/^ar[-_]?AE/i.test(v.lang)) || vs.find(v=>/^ar/i.test(v.lang)) || null) : (vs.find(v=>/^en[-_]?(GB|US|AU)/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null); }catch(e){}
@@ -224,11 +261,15 @@ try{ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }catch(e){}
 function say(text){
   if (S.voice!=='voice') return;
   try{
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = arVoice ? arVoice.lang : (S.lang==='ar'?'ar-SA':'en-US'); if (arVoice) u.voice = arVoice;
-    u.rate = 1.05; u.volume = 1;
-    speechSynthesis.speak(u);
+    if (!arVoice) pickVoice();
+    const go = ()=>{
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = arVoice ? arVoice.lang : (S.lang==='ar'?'ar-SA':'en-US'); if (arVoice) u.voice = arVoice;
+      u.rate = 1.05; u.volume = 1;
+      speechSynthesis.resume(); speechSynthesis.speak(u);
+    };
+    // Safari drops an utterance spoken right after cancel(), so wait a moment.
+    if (speechSynthesis.speaking || speechSynthesis.pending){ speechSynthesis.cancel(); setTimeout(go, 150); } else go();
   }catch(e){}
 }
 
@@ -457,7 +498,7 @@ $('btnStart').onclick = ()=>start(false);
 $('btnDemo').onclick = ()=>start(true);
 $('btnSettings').onclick = ()=>{ buildSettings(); $('sheet').hidden=false; };
 $('btnClose').onclick = ()=>{ $('sheet').hidden=true; };
-$('btnTest').onclick = ()=>{ unlockAudio(); beep(1150,.18,4); setTimeout(()=>say(t('sayDropOver')(100,100+S.tol)),1300); };
+$('btnTest').onclick = ()=>{ unlockAudio(); setTimeout(()=>beep(1150,.18,4),400); setTimeout(()=>say(t('sayDropOver')(100,100+S.tol)),1300); };
 document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible' && $('start').hidden) keepAwake(); });
 function setLang(v){ S.lang=v; store.set('lang',v); applyLang(); buildSettings(); buildManual(); seg('segLangStart', [['ar','العربية'],['en','English']], v, setLang); render(); }
 $('btnLang').onclick = ()=> setLang(S.lang==='ar'?'en':'ar');
