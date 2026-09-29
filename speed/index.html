@@ -167,7 +167,7 @@ const TX = {
   none:'بدون',vBoth:'صوت + صفارة',vBeep:'صفارة بس',vOff:'صامت',yes:'أيوه',onlyDown:'لما يقل بس',auto:'تلقائي',
   waitGps:'مستني إشارة GPS…',noLimit:'مش لاقي حد السرعة هنا، اختاره بإيدك',
   over:(l,s)=>`خفّف! الحد ${l} وإنت ${s}`,inMargin:m=>`فوق الحد، جوّه الهامش (لحد ${m})`,ok:'تمام، ضمن الحد',
-  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,
+  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,sayOver:(s,m)=>`انتبه، إنت ماشي ${s}. المسموح ${m}`,
   locOff:'الموقع مقفول. فعّله من الإعدادات ← الخصوصية ← خدمات الموقع ← Safari',locErr:'مش قادر يجيب الموقع، جرّب تاني',
   demoEnd:'خلصت التجربة. اعمل Reload للصفحة وابدأ'},
  en:{map:'Road data',screen:'Screen',settings:'Settings',yourSpeed:'Your speed km/h',allowedTo:'Allowed up to',
@@ -179,7 +179,7 @@ const TX = {
   none:'None',vBoth:'Voice + beep',vBeep:'Beep only',vOff:'Silent',yes:'Yes',onlyDown:'Only when it drops',auto:'Auto',
   waitGps:'Waiting for GPS…',noLimit:'No speed limit found here. Pick it yourself',
   over:(l,s)=>`Slow down! Limit ${l}, you are at ${s}`,inMargin:m=>`Above the limit, within margin (up to ${m})`,ok:'Good, within the limit',
-  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,
+  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,sayOver:(s,m)=>`Warning, you are at ${s}. Allowed ${m}`,
   locOff:'Location is off. Turn it on in Settings > Privacy > Location Services > Safari',locErr:'Could not get your location, try again',
   demoEnd:'Demo finished. Reload the page to start'}
 };
@@ -195,7 +195,7 @@ const st = {
   speed: 0, heading: null, lat: null, lon: null, lastFix: null,
   limit: null, limitTime: 0, candidate: null, candCount: 0,
   manual: null, ways: [], bbox: null, fetching: false,
-  lastOverBeep: 0, demo: false
+  lastOverBeep: 0, lastOverSay: 0, wasOver: false, demo: false
 };
 
 /* ---------- audio ---------- */
@@ -371,7 +371,7 @@ function onLimitChange(oldL, newL){
     document.body.classList.remove('flash'); void document.body.offsetWidth; document.body.classList.add('flash');
     beep(over?1150:900, .18, over?4:2);
     setTimeout(()=> say(over ? t('sayDropOver')(newL,max) : t('sayDrop')(newL)), over?1300:700);
-    st.lastOverBeep = Date.now();
+    st.lastOverBeep = Date.now(); st.lastOverSay = Date.now(); st.wasOver = over;
   } else if (S.anyChange){
     beep(660,.12,1); setTimeout(()=>say(t('sayUp')(newL)),250);
   }
@@ -379,9 +379,18 @@ function onLimitChange(oldL, newL){
 
 function checkOver(){
   const lim = effLimit(); if (lim==null) return;
-  if (st.speed > lim + S.tol && Date.now()-st.lastOverBeep > 6000){
-    st.lastOverBeep = Date.now(); beep(1150,.14,2,.08);
+  const max = lim + S.tol, spd = Math.round(st.speed), now = Date.now();
+  const over = spd > max;
+  if (over && !st.wasOver){
+    // just crossed limit + margin: strong alert right away
+    st.lastOverBeep = now; st.lastOverSay = now;
+    beep(1150,.18,3,.08);
+    setTimeout(()=> say(t('sayOver')(spd, max)), 900);
+  } else if (over){
+    if (now - st.lastOverSay > 15000){ st.lastOverSay = now; st.lastOverBeep = now; beep(1150,.14,2,.08); setTimeout(()=> say(t('sayOver')(spd, max)), 700); }
+    else if (now - st.lastOverBeep > 4000){ st.lastOverBeep = now; beep(1150,.14,2,.08); }
   }
+  st.wasOver = over;
 }
 
 /* ---------- GPS ---------- */
