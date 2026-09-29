@@ -81,6 +81,7 @@ body.flash{animation:flash .5s 4}
 .seg button{flex:1;min-width:64px;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:12px 8px;font:600 16px var(--f-ar)}
 .seg button.sel{background:var(--fg);color:var(--bg)}
 .note{font-size:13px;color:var(--muted);line-height:1.7}
+  .diag{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.7 ui-monospace,Menlo,monospace;color:var(--fg);white-space:pre-wrap;direction:ltr;text-align:left;max-height:40vh;overflow:auto}
 button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
 </style>
 </head>
@@ -107,6 +108,8 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
 </div>
 
 <div class="strip" id="strip"></div>
+<button class="ghost" id="btnDiag" type="button" data-t="diagBtn" style="padding:8px"></button>
+<pre class="diag" id="diag" hidden></pre>
 
 <div class="row">
   <span class="lbl" data-t="manualLbl"></span>
@@ -167,7 +170,7 @@ const TX = {
   none:'بدون',vBoth:'صوت + صفارة',vBeep:'صفارة بس',vOff:'صامت',yes:'أيوه',onlyDown:'لما يقل بس',auto:'تلقائي',
   waitGps:'مستني إشارة GPS…',noLimit:'مش لاقي حد السرعة هنا، اختاره بإيدك',
   over:(l,s)=>`خفّف! الحد ${l} وإنت ${s}`,inMargin:m=>`فوق الحد، جوّه الهامش (لحد ${m})`,ok:'تمام، ضمن الحد',
-  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,sayOver:(s,m)=>`انتبه، إنت ماشي ${s}. المسموح ${m}`,
+  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,diagBtn:'فحص: هو شايف إيه؟',sayOver:(s,m)=>`انتبه، إنت ماشي ${s}. المسموح ${m}`,
   locOff:'الموقع مقفول. فعّله من الإعدادات ← الخصوصية ← خدمات الموقع ← Safari',locErr:'مش قادر يجيب الموقع، جرّب تاني',
   demoEnd:'خلصت التجربة. اعمل Reload للصفحة وابدأ'},
  en:{map:'Road data',screen:'Screen',settings:'Settings',yourSpeed:'Your speed km/h',allowedTo:'Allowed up to',
@@ -179,7 +182,7 @@ const TX = {
   none:'None',vBoth:'Voice + beep',vBeep:'Beep only',vOff:'Silent',yes:'Yes',onlyDown:'Only when it drops',auto:'Auto',
   waitGps:'Waiting for GPS…',noLimit:'No speed limit found here. Pick it yourself',
   over:(l,s)=>`Slow down! Limit ${l}, you are at ${s}`,inMargin:m=>`Above the limit, within margin (up to ${m})`,ok:'Good, within the limit',
-  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,sayOver:(s,m)=>`Warning, you are at ${s}. Allowed ${m}`,
+  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,diagBtn:'Check: what does it see?',sayOver:(s,m)=>`Warning, you are at ${s}. Allowed ${m}`,
   locOff:'Location is off. Turn it on in Settings > Privacy > Location Services > Safari',locErr:'Could not get your location, try again',
   demoEnd:'Demo finished. Reload the page to start'}
 };
@@ -195,7 +198,7 @@ const st = {
   speed: 0, heading: null, lat: null, lon: null, lastFix: null,
   limit: null, limitTime: 0, candidate: null, candCount: 0,
   manual: null, ways: [], bbox: null, fetching: false,
-  lastOverBeep: 0, lastOverSay: 0, wasOver: false, demo: false
+  nextFetch: 0, failCount: 0, lastOverBeep: 0, lastOverSay: 0, wasOver: false, demo: false
 };
 
 /* ---------- audio ----------
@@ -304,26 +307,27 @@ function parseLimit(v){
 const ENDPOINTS = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const HALF = 0.018; // ~2 km each side
 async function fetchWays(lat, lon){
-  if (st.fetching) return; st.fetching = true; setDot('dMap','wait');
+  if (st.fetching || Date.now() < st.nextFetch) return; st.fetching = true; setDot('dMap','wait'); D.fetches++;
   const s=lat-HALF, n=lat+HALF, w=lon-HALF, e=lon+HALF;
-  const hw = '^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|unclassified|residential)$';
+  const hw = '^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$';
   const q = `[out:json][timeout:25];way["highway"~"${hw}"](${s},${w},${n},${e});out tags geom;`;
   for (const ep of ENDPOINTS){
     try{
       const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 25000);
       const r = await fetch(ep, {method:'POST', body:'data='+encodeURIComponent(q), headers:{'Content-Type':'application/x-www-form-urlencoded'}, signal:ctl.signal});
       clearTimeout(t);
-      if (!r.ok) continue;
+      if (!r.ok){ D.err = 'HTTP '+r.status+' '+ep.split('/')[2]; continue; }
       const j = await r.json();
       st.ways = j.elements.filter(x=>x.geometry && x.geometry.length>1).map(x=>({
         g: x.geometry, oneway: x.tags.oneway==='yes' || /^motorway/.test(x.tags.highway),
         rev: x.tags.oneway==='-1',
+        name: x.tags['name:'+S.lang] || x.tags.name || x.tags.ref || x.tags.highway,
         lim: parseLimit(x.tags.maxspeed), fwd: parseLimit(x.tags['maxspeed:forward']), bwd: parseLimit(x.tags['maxspeed:backward'])
       }));
-      st.bbox = {s,n,w,e}; st.fetching = false; setDot('dMap','on'); return;
-    }catch(err){ /* try next */ }
+      st.bbox = {s,n,w,e}; st.fetching = false; st.failCount = 0; D.err=''; D.loadedAt = Date.now(); setDot('dMap','on'); renderDiag(); return;
+    }catch(err){ D.err = (err.name==='AbortError'?'timeout ':err.message+' ')+ep.split('/')[2]; }
   }
-  st.fetching = false; setDot('dMap','bad');
+  st.fetching = false; st.failCount++; st.nextFetch = Date.now() + Math.min(60000, 5000*st.failCount); setDot('dMap','bad'); renderDiag();
 }
 function needFetch(lat, lon){
   const b = st.bbox; if (!b) return true;
@@ -331,13 +335,14 @@ function needFetch(lat, lon){
   return lat < b.s+m || lat > b.n-m || lon < b.w+m || lon > b.e-m;
 }
 function matchLimit(lat, lon, heading){
-  let best = null, bestScore = 1e9;
+  let best = null, bestScore = 1e9; D.near = null;
   for (const w of st.ways){
     for (let i=0;i<w.g.length-1;i++){
       const a = toXY(w.g[i].lat, w.g[i].lon, lat, lon), b = toXY(w.g[i+1].lat, w.g[i+1].lon, lat, lon);
       const dx=b[0]-a[0], dy=b[1]-a[1], L2=dx*dx+dy*dy; if (!L2) continue;
       let t = -(a[0]*dx + a[1]*dy)/L2; t = Math.max(0, Math.min(1, t));
       const px=a[0]+t*dx, py=a[1]+t*dy, dist=Math.hypot(px,py);
+      if (!D.near || dist < D.near.dist) D.near = {name:w.name, lim:w.lim||w.fwd||w.bwd, dist};
       if (dist > 30) continue;
       let score = dist, forward = true;
       if (heading!=null){
@@ -434,6 +439,27 @@ function checkOver(){
   st.wasOver = over;
 }
 
+/* ---------- diagnostics ---------- */
+const D = {fixes:0, acc:null, raw:null, gpsErr:'', fetches:0, err:'', loadedAt:0, near:null};
+function renderDiag(){
+  const el = $('diag'); if (!el || el.hidden) return;
+  const withLim = st.ways.filter(w=>w.lim||w.fwd||w.bwd).length;
+  const ago = D.loadedAt ? Math.round((Date.now()-D.loadedAt)/1000)+'s ago' : '—';
+  el.textContent =
+`GPS fixes: ${D.fixes}   accuracy: ${D.acc!=null? '±'+D.acc+' m' : '—'}
+GPS speed (raw): ${D.raw ?? '—'} km/h   shown: ${Math.round(st.speed)}
+heading: ${st.heading!=null? Math.round(st.heading)+'°' : '— (needs > 8 km/h)'}
+GPS error: ${D.gpsErr || 'none'}
+position: ${st.lat!=null? st.lat.toFixed(5)+', '+st.lon.toFixed(5) : '—'}
+
+roads loaded: ${st.ways.length} (with limit: ${withLim})   loaded: ${ago}
+map requests: ${D.fetches}   ${st.fetching?'loading…':''}
+map error: ${D.err || 'none'}
+nearest road: ${D.near? D.near.name+' · '+(D.near.lim??'no limit')+' · '+Math.round(D.near.dist)+' m' : '—'}
+matched limit: ${st.limit ?? '—'}   manual: ${st.manual ?? 'auto'}   margin: +${S.tol}
+audio unlocked: ${audioReady}   voice: ${arVoice? arVoice.lang : 'default'}`;
+}
+
 /* ---------- GPS ---------- */
 let prev = null;
 function onPos(p){
@@ -448,6 +474,7 @@ function onPos(p){
     if (hd==null && d>8) hd = bearing(a,[0,0]);
   }
   prev = {lat:c.latitude, lon:c.longitude, t:now};
+  D.fixes++; D.acc = Math.round(c.accuracy); D.raw = (c.speed==null ? 'null' : c.speed<0 ? 'n/a' : Math.round(c.speed*3.6));
   st.speed = spd ?? 0; st.heading = (st.speed>8) ? hd : null;
   st.lat=c.latitude; st.lon=c.longitude; st.lastFix=now;
   setDot('dGps', c.accuracy < 30 ? 'on' : 'wait');
@@ -465,9 +492,11 @@ function onPos(p){
       }
     }
   }
-  checkOver(); render();
+  checkOver(); render(); renderDiag();
 }
 function onErr(e){
+  D.gpsErr = ['','denied','unavailable','timeout'][e.code]||'error'; renderDiag();
+  if (e.code===3 && st.lastFix) return;
   setDot('dGps','bad');
   $('strip').textContent = e.code===1 ? t('locOff') : t('locErr');
 }
@@ -496,6 +525,7 @@ function start(demo){
 }
 $('btnStart').onclick = ()=>start(false);
 $('btnDemo').onclick = ()=>start(true);
+$('btnDiag').onclick = ()=>{ $('diag').hidden = !$('diag').hidden; renderDiag(); };
 $('btnSettings').onclick = ()=>{ buildSettings(); $('sheet').hidden=false; };
 $('btnClose').onclick = ()=>{ $('sheet').hidden=true; };
 $('btnTest').onclick = ()=>{ unlockAudio(); setTimeout(()=>beep(1150,.18,4),400); setTimeout(()=>say(t('sayDropOver')(100,100+S.tol)),1300); };
