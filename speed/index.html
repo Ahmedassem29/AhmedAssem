@@ -446,7 +446,7 @@ function checkOver(){
 /* ---------- TomTom speed limits (primary source; OSM is the fallback) ----------
    Reverse geocode with returnSpeedLimit. Free tier is 2,500 calls/day, so we
    call at most every 4 s and only after moving 120 m, and stop at 2,300/day. */
-const TT_KEY = '';
+const TT_KEY = 'uD1kO7bFlwLeob3wRCpaV1ugplpP8IZV';
 const TT = {lastT:0, lastLat:null, lastLon:null, busy:false, lim:null, limT:0, road:'', err:'', calls:0};
 function ttDayCount(add){
   const day = new Date().toISOString().slice(0,10);
