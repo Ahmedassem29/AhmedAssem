@@ -76,6 +76,8 @@ body.flash{animation:flash .5s 4}
 /* settings sheet */
 .sheet{position:fixed;inset:auto 0 0 0;background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
   padding:20px 16px calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:18px;z-index:6;max-height:85%;overflow:auto}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:6}
+.sheet{z-index:7!important}
 .row{display:flex;flex-direction:column;gap:8px}
 .seg{display:flex;gap:8px;flex-wrap:wrap}
 .seg button{flex:1;min-width:64px;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:12px 8px;font:600 16px var(--f-ar)}
@@ -125,6 +127,7 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
   <div class="err" id="err"></div>
 </div>
 
+<div class="backdrop" id="backdrop" hidden></div>
 <div class="sheet" id="sheet" hidden>
   <div class="row">
     <span class="lbl" data-t="tolLbl"></span>
@@ -144,7 +147,7 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
     <div class="seg" id="segAny"></div>
   </div>
   <button class="big" id="btnTest" type="button" style="background:var(--warn);color:#1a1200" data-t="test"></button>
-  <button class="ghost" id="btnClose" type="button" data-t="done"></button>
+  <button class="big" id="btnClose" type="button" data-t="done" style="background:var(--fg);color:var(--bg)"></button>
 </div>
 
 <script>
@@ -526,8 +529,10 @@ function start(demo){
 $('btnStart').onclick = ()=>start(false);
 $('btnDemo').onclick = ()=>start(true);
 $('btnDiag').onclick = ()=>{ $('diag').hidden = !$('diag').hidden; renderDiag(); };
-$('btnSettings').onclick = ()=>{ buildSettings(); $('sheet').hidden=false; };
-$('btnClose').onclick = ()=>{ $('sheet').hidden=true; };
+$('btnSettings').onclick = ()=>{ buildSettings(); $('sheet').hidden=false; $('backdrop').hidden=false; };
+const closeSheet = ()=>{ $('sheet').hidden=true; $('backdrop').hidden=true; render(); };
+$('btnClose').onclick = closeSheet;
+$('backdrop').onclick = closeSheet;
 $('btnTest').onclick = ()=>{ unlockAudio(); setTimeout(()=>beep(1150,.18,4),400); setTimeout(()=>say(t('sayDropOver')(100,100+S.tol)),1300); };
 document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible' && $('start').hidden) keepAwake(); });
 function setLang(v){ S.lang=v; store.set('lang',v); applyLang(); buildSettings(); buildManual(); seg('segLangStart', [['ar','العربية'],['en','English']], v, setLang); render(); }
