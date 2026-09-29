@@ -85,8 +85,28 @@ body.flash{animation:flash .5s 4}
 .seg button.sel{background:var(--fg);color:var(--bg)}
 .note{font-size:13px;color:var(--muted);line-height:1.7}
   .diag{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.7 ui-monospace,Menlo,monospace;color:var(--fg);white-space:pre-wrap;direction:ltr;text-align:left;max-height:40vh;overflow:auto}
+/* trips history */
+.trips{position:fixed;inset:0;background:var(--bg);z-index:9;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 12px);gap:12px}
+.trips-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.trips-head h2{margin:0;font-size:22px}
+.trips-body{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;min-height:0}
+.trip{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:6px;text-align:start;color:var(--fg);font:inherit;width:100%}
+.trip .d{font-weight:700}
+.trip .m{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:13px}
+.trip .m b{color:var(--fg);font:700 16px var(--f-num);font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);text-align:center;padding:40px 10px;line-height:1.8}
+#tripMap{height:42vh;min-height:220px;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+.kv span{color:var(--muted)} .kv a{color:var(--fg)}
+.roads{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.roads div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-block:6px}
+.roads div b{font:700 15px var(--f-num)}
+.danger-btn{background:transparent;color:var(--danger);border:1px solid var(--danger);border-radius:12px;padding:10px 14px;font:600 14px var(--f-ar)}
 button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
 
@@ -96,7 +116,7 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
     <span class="dot" id="dMap"><i></i><span data-t="map"></span></span>
     <span class="dot" id="dWake"><i></i><span data-t="screen"></span></span>
   </div>
-  <div style="display:flex;gap:8px"><button class="iconbtn" id="btnLang" type="button">EN</button><button class="iconbtn" id="btnSettings" type="button" data-t="settings"></button></div>
+  <div style="display:flex;gap:8px"><button class="iconbtn" id="btnLang" type="button">EN</button><button class="iconbtn" id="btnTrips" type="button" data-t="trips"></button><button class="iconbtn" id="btnSettings" type="button" data-t="settings"></button></div>
 </div>
 
 <div class="main">
@@ -125,9 +145,14 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
   <p data-t="intro"></p>
   <button class="big" id="btnStart" type="button" data-t="start"></button>
   <button class="ghost" id="btnDemo" type="button" data-t="demo"></button>
+  <button class="ghost" id="btnTrips2" type="button" data-t="tripsLong"></button>
   <div class="err" id="err"></div>
 </div>
 
+<div class="trips" id="trips" hidden>
+  <div class="trips-head"><button class="iconbtn" id="tripsBack" type="button" data-t="back"></button><h2 id="tripsTitle"></h2><button class="danger-btn" id="tripsDel" type="button"></button></div>
+  <div class="trips-body" id="tripsBody"></div>
+</div>
 <div class="backdrop" id="backdrop" hidden></div>
 <div class="sheet" id="sheet" hidden>
   <div class="row">
@@ -174,7 +199,11 @@ const TX = {
   none:'بدون',vBoth:'صوت + صفارة',vBeep:'صفارة بس',vOff:'صامت',yes:'أيوه',onlyDown:'لما يقل بس',auto:'تلقائي',
   waitGps:'مستني إشارة GPS…',noLimit:'مش لاقي حد السرعة هنا، اختاره بإيدك',
   over:(l,s)=>`خفّف! الحد ${l} وإنت ${s}`,inMargin:m=>`فوق الحد، جوّه الهامش (لحد ${m})`,ok:'تمام، ضمن الحد',
-  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,diagBtn:'فحص: هو شايف إيه؟',sayOver:(s,m)=>`انتبه، إنت ماشي ${s}. المسموح ${m}`,
+  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,diagBtn:'فحص: هو شايف إيه؟',trips:'الرحلات',tripsLong:'سجل الرحلات',back:'رجوع',close:'قفل',
+  tripsTitle:'سجل الرحلات',noTrips:'لسه مفيش رحلات. أول ما تدوس ابدأ وتتحرك، الرحلة هتتسجّل هنا.<br>السجل محفوظ على الموبايل ده بس.',
+  started:'البداية',ended:'النهاية',duration:'المدة',distance:'المسافة',maxSpeed:'أعلى سرعة',alerts:'تنبيهات السرعة',
+  roadsLbl:'الطرق',noRoads:'مفيش أسماء طرق متسجّلة',delTrip:'امسح الرحلة',delAll:'امسح الكل',sure:'متأكد؟ دوس تاني',
+  km:'كم',min:'د',hr:'س',ongoing:'جارية الآن',noMap:'الخريطة محتاجة إنترنت',sayOver:(s,m)=>`انتبه، إنت ماشي ${s}. المسموح ${m}`,
   locOff:'الموقع مقفول. فعّله من الإعدادات ← الخصوصية ← خدمات الموقع ← Safari',locErr:'مش قادر يجيب الموقع، جرّب تاني',
   demoEnd:'خلصت التجربة. اعمل Reload للصفحة وابدأ'},
  en:{map:'Road data',screen:'Screen',settings:'Settings',yourSpeed:'Your speed km/h',allowedTo:'Allowed up to',
@@ -186,7 +215,11 @@ const TX = {
   none:'None',vBoth:'Voice + beep',vBeep:'Beep only',vOff:'Silent',yes:'Yes',onlyDown:'Only when it drops',auto:'Auto',
   waitGps:'Waiting for GPS…',noLimit:'No speed limit found here. Pick it yourself',
   over:(l,s)=>`Slow down! Limit ${l}, you are at ${s}`,inMargin:m=>`Above the limit, within margin (up to ${m})`,ok:'Good, within the limit',
-  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,diagBtn:'Check: what does it see?',sayOver:(s,m)=>`Warning, you are at ${s}. Allowed ${m}`,
+  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,diagBtn:'Check: what does it see?',trips:'Trips',tripsLong:'Trip history',back:'Back',close:'Close',
+  tripsTitle:'Trip history',noTrips:'No trips yet. Press Start and drive; the trip is saved here.<br>History is stored on this phone only.',
+  started:'Start',ended:'End',duration:'Duration',distance:'Distance',maxSpeed:'Top speed',alerts:'Speed alerts',
+  roadsLbl:'Roads',noRoads:'No road names recorded',delTrip:'Delete trip',delAll:'Delete all',sure:'Sure? Tap again',
+  km:'km',min:'min',hr:'h',ongoing:'In progress',noMap:'The map needs internet',sayOver:(s,m)=>`Warning, you are at ${s}. Allowed ${m}`,
   locOff:'Location is off. Turn it on in Settings > Privacy > Location Services > Safari',locErr:'Could not get your location, try again',
   demoEnd:'Demo finished. Reload the page to start'}
 };
@@ -432,6 +465,7 @@ function checkOver(){
   const max = lim + S.tol, spd = Math.round(st.speed), now = Date.now();
   const over = spd > max;
   if (over && !st.wasOver){
+    if (trip && !st.demo) trip.alerts = (trip.alerts||0) + 1;
     // just crossed limit + margin: strong alert right away
     st.lastOverBeep = now; st.lastOverSay = now;
     beep(1150,.18,3,.08);
@@ -539,6 +573,8 @@ function onPos(p){
       }
     }
   }
+  tripPoint(c.latitude, c.longitude, st.speed, now);
+  tripRoad(tt ? TT.road : (D.near && D.near.dist < 30 ? D.near.name : ''), effLimit());
   checkOver(); render(); renderDiag();
 }
 function onErr(e){
@@ -561,6 +597,112 @@ function runDemo(){
   tick();
 }
 
+/* ---------- trip history (stored on this phone only) ---------- */
+let trip = null, lastPersist = 0, stillSince = 0;
+const loadTrips = ()=> { const a = store.get('trips', []); return Array.isArray(a) ? a : []; };
+function persistTrip(force){
+  if (!trip || trip.pts.length < 2) return;
+  if (!force && Date.now() - lastPersist < 10000) return;
+  lastPersist = Date.now();
+  const a = loadTrips(); const i = a.findIndex(x=>x.id===trip.id);
+  if (i >= 0) a[i] = trip; else a.push(trip);
+  while (a.length > 60) a.shift();
+  store.set('trips', a);
+}
+function endTrip(){ persistTrip(true); trip = null; }
+function tripPoint(lat, lon, kmh, now){
+  if (st.demo) return;
+  // a trip ends after 5 minutes standing still; the next movement starts a new one
+  if (kmh < 5){ if (!stillSince) stillSince = now; if (trip && now - stillSince > 300000){ endTrip(); } }
+  else stillSince = 0;
+  if (!trip){
+    if (kmh < 5) return;
+    trip = {id: now, start: now, end: now, pts: [], roads: [], max: 0, dist: 0, alerts: 0};
+  }
+  const last = trip.pts[trip.pts.length-1];
+  trip.end = now; trip.max = Math.max(trip.max, Math.round(kmh));
+  if (last){
+    const d = Math.hypot(...toXY(lat, lon, last[0], last[1]));
+    if (d < 30 && now - last[2] < 15000) { persistTrip(); return; }
+    if (d < 3000) trip.dist += d;
+  }
+  trip.pts.push([+lat.toFixed(5), +lon.toFixed(5), now, Math.round(kmh)]);
+  if (trip.pts.length > 4000) trip.pts = trip.pts.filter((_, i)=> i % 2 === 0 || i === trip.pts.length-1);
+  persistTrip();
+}
+function tripRoad(name, lim){
+  if (!trip || !name) return;
+  const r = trip.roads[trip.roads.length-1];
+  if (r && r.n === name){ if (lim && !r.l) r.l = lim; return; }
+  trip.roads.push({n: name, l: lim || null, t: Date.now()});
+  if (trip.roads.length > 100) trip.roads.shift();
+}
+window.addEventListener('pagehide', ()=> persistTrip(true));
+document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='hidden') persistTrip(true); });
+
+const locale = ()=> S.lang==='ar' ? 'ar-AE' : 'en-GB';
+const fmtTime = ms => new Date(ms).toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
+const fmtDate = ms => new Date(ms).toLocaleDateString(locale(), {weekday:'short', day:'numeric', month:'short'});
+function fmtDur(ms){ const m = Math.round(ms/60000); return m < 60 ? `${m} ${t('min')}` : `${Math.floor(m/60)} ${t('hr')} ${m%60} ${t('min')}`; }
+const fmtKm = m => (m/1000).toFixed(m < 10000 ? 1 : 0) + ' ' + t('km');
+const mapsLink = p => `https://www.google.com/maps?q=${p[0]},${p[1]}`;
+let tripMap = null, delArmed = null;
+
+function armDelete(btn, label, action){
+  if (delArmed === btn){ delArmed = null; action(); return; }
+  delArmed = btn; btn.textContent = t('sure');
+  setTimeout(()=>{ if (delArmed === btn){ delArmed = null; btn.textContent = label; } }, 3000);
+}
+function openTrips(){ persistTrip(true); showTripList(); $('trips').hidden = false; }
+function closeTrips(){ $('trips').hidden = true; if (tripMap){ tripMap.remove(); tripMap = null; } }
+function showTripList(){
+  if (tripMap){ tripMap.remove(); tripMap = null; }
+  $('tripsTitle').textContent = t('tripsTitle');
+  $('tripsBack').textContent = t('close'); $('tripsBack').onclick = closeTrips;
+  const del = $('tripsDel'), a = loadTrips().slice().reverse();
+  del.hidden = !a.length; del.textContent = t('delAll');
+  del.onclick = ()=> armDelete(del, t('delAll'), ()=>{ store.set('trips', []); trip = null; showTripList(); });
+  const body = $('tripsBody'); body.innerHTML = '';
+  if (!a.length){ body.innerHTML = `<div class="empty">${t('noTrips')}</div>`; return; }
+  for (const tr of a){
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'trip';
+    const live = trip && trip.id === tr.id;
+    b.innerHTML = `<div class="d">${fmtDate(tr.start)} · ${fmtTime(tr.start)} – ${live ? t('ongoing') : fmtTime(tr.end)}</div>
+      <div class="m"><span>${t('distance')} <b>${fmtKm(tr.dist)}</b></span><span>${t('duration')} <b>${fmtDur(tr.end-tr.start)}</b></span>
+      <span>${t('maxSpeed')} <b>${tr.max}</b></span><span>${t('alerts')} <b>${tr.alerts||0}</b></span></div>
+      <div class="m">${(tr.roads||[]).slice(0,4).map(r=>r.n).join(' ← ') || ''}</div>`;
+    b.onclick = ()=> showTrip(tr.id);
+    body.appendChild(b);
+  }
+}
+function showTrip(id){
+  const tr = loadTrips().find(x=>x.id===id); if (!tr) return showTripList();
+  $('tripsTitle').textContent = fmtDate(tr.start);
+  $('tripsBack').textContent = t('back'); $('tripsBack').onclick = showTripList;
+  const del = $('tripsDel'); del.hidden = false; del.textContent = t('delTrip');
+  del.onclick = ()=> armDelete(del, t('delTrip'), ()=>{ store.set('trips', loadTrips().filter(x=>x.id!==id)); if (trip && trip.id===id) trip = null; showTripList(); });
+  const p0 = tr.pts[0], p1 = tr.pts[tr.pts.length-1];
+  const body = $('tripsBody');
+  body.innerHTML = `<div id="tripMap"></div>
+    <div class="kv">
+      <span>${t('started')}</span><div>${fmtTime(tr.start)} · <a href="${mapsLink(p0)}" target="_blank" rel="noopener">${p0[0]}, ${p0[1]}</a></div>
+      <span>${t('ended')}</span><div>${fmtTime(tr.end)} · <a href="${mapsLink(p1)}" target="_blank" rel="noopener">${p1[0]}, ${p1[1]}</a></div>
+      <span>${t('duration')}</span><div>${fmtDur(tr.end-tr.start)}</div>
+      <span>${t('distance')}</span><div>${fmtKm(tr.dist)}</div>
+      <span>${t('maxSpeed')}</span><div>${tr.max} ${t('km')}/${t('hr')}</div>
+      <span>${t('alerts')}</span><div>${tr.alerts||0}</div>
+    </div>
+    <span class="lbl">${t('roadsLbl')}</span>
+    <div class="roads">${(tr.roads||[]).length ? tr.roads.map(r=>`<div><span>${fmtTime(r.t)} · ${r.n.replace(/[<>&]/g,'')}</span><b>${r.l ?? ''}</b></div>`).join('') : `<div class="empty">${t('noRoads')}</div>`}</div>`;
+  if (!window.L){ $('tripMap').innerHTML = `<div class="empty">${t('noMap')}</div>`; return; }
+  tripMap = L.map('tripMap', {attributionControl: true, zoomControl: true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(tripMap);
+  const line = L.polyline(tr.pts.map(p=>[p[0],p[1]]), {color:'#2fd27a', weight:5}).addTo(tripMap);
+  L.circleMarker(p0, {radius:8, color:'#fff', fillColor:'#2fd27a', fillOpacity:1, weight:2}).addTo(tripMap);
+  L.circleMarker(p1, {radius:8, color:'#fff', fillColor:'#ff3b3b', fillOpacity:1, weight:2}).addTo(tripMap);
+  tripMap.fitBounds(line.getBounds(), {padding:[20,20]});
+}
+
 /* ---------- start ---------- */
 function start(demo){
   unlockAudio(); keepAwake();
@@ -572,6 +714,8 @@ function start(demo){
 }
 $('btnStart').onclick = ()=>start(false);
 $('btnDemo').onclick = ()=>start(true);
+$('btnTrips').onclick = openTrips;
+$('btnTrips2').onclick = openTrips;
 $('btnDiag').onclick = ()=>{ $('diag').hidden = !$('diag').hidden; renderDiag(); };
 $('btnSettings').onclick = ()=>{ buildSettings(); $('sheet').hidden=false; $('backdrop').hidden=false; };
 const closeSheet = ()=>{ $('sheet').hidden=true; $('backdrop').hidden=true; render(); };
