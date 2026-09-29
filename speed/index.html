@@ -443,6 +443,43 @@ function checkOver(){
   st.wasOver = over;
 }
 
+/* ---------- TomTom speed limits (primary source; OSM is the fallback) ----------
+   Reverse geocode with returnSpeedLimit. Free tier is 2,500 calls/day, so we
+   call at most every 4 s and only after moving 120 m, and stop at 2,300/day. */
+const TT_KEY = '';
+const TT = {lastT:0, lastLat:null, lastLon:null, busy:false, lim:null, limT:0, road:'', err:'', calls:0};
+function ttDayCount(add){
+  const day = new Date().toISOString().slice(0,10);
+  let o = store.get('tt', {day, n:0}); if (o.day !== day) o = {day, n:0};
+  if (add){ o.n += add; store.set('tt', o); }
+  return o.n;
+}
+async function ttLookup(lat, lon, heading){
+  if (!TT_KEY || TT.busy) return;
+  const now = Date.now();
+  const moved = TT.lastLat==null ? 1e9 : Math.hypot(...toXY(lat, lon, TT.lastLat, TT.lastLon));
+  if (now - TT.lastT < 4000 || (moved < 120 && now - TT.lastT < 20000)) return;
+  if (ttDayCount(0) >= 2300){ TT.err = 'daily limit reached, using map data'; return; }
+  TT.busy = true; TT.lastT = now; TT.lastLat = lat; TT.lastLon = lon;
+  try{
+    let url = `https://api.tomtom.com/search/2/reverseGeocode/${lat.toFixed(6)},${lon.toFixed(6)}.json?key=${TT_KEY}&returnSpeedLimit=true&radius=40&language=${S.lang==='ar'?'ar':'en-GB'}`;
+    if (heading!=null) url += `&heading=${Math.round(heading)}`;
+    const ctl = new AbortController(); const tm = setTimeout(()=>ctl.abort(), 8000);
+    const r = await fetch(url, {signal:ctl.signal}); clearTimeout(tm);
+    ttDayCount(1); TT.calls++;
+    if (!r.ok){ TT.err = 'HTTP '+r.status; return; }
+    const j = await r.json();
+    const a = j.addresses && j.addresses[0] && j.addresses[0].address;
+    const lim = a ? parseLimit(a.speedLimit) : null;
+    TT.road = a ? (a.streetName || a.street || a.routeNumbers?.[0] || '') : '';
+    TT.err = '';
+    if (lim){ TT.lim = lim; TT.limT = Date.now(); setDot('dMap','on'); }
+    else { TT.lim = null; }
+  }catch(e){ TT.err = e.name==='AbortError' ? 'timeout' : e.message; }
+  finally{ TT.busy = false; }
+}
+function ttFresh(){ return TT.lim && Date.now() - TT.limT < 25000 ? TT.lim : null; }
+
 /* ---------- diagnostics ---------- */
 const D = {fixes:0, acc:null, raw:null, gpsErr:'', fetches:0, err:'', loadedAt:0, near:null};
 function renderDiag(){
@@ -460,6 +497,8 @@ roads loaded: ${st.ways.length} (with limit: ${withLim})   loaded: ${ago}
 map requests: ${D.fetches}   ${st.fetching?'loading…':''}
 map error: ${D.err || 'none'}
 nearest road: ${D.near? D.near.name+' · '+(D.near.lim??'no limit')+' · '+Math.round(D.near.dist)+' m' : '—'}
+TomTom: ${TT_KEY? (TT.lim ?? '—')+' · '+(TT.road||'')+' · today '+ttDayCount(0)+' calls'+(TT.err?' · '+TT.err:'') : 'no key'}
+source: ${D.src||'—'}
 matched limit: ${st.limit ?? '—'}   manual: ${st.manual ?? 'auto'}   margin: +${S.tol}
 audio unlocked: ${audioReady}   voice: ${arVoice? arVoice.lang : 'default'}`;
 }
@@ -484,7 +523,11 @@ function onPos(p){
   setDot('dGps', c.accuracy < 30 ? 'on' : 'wait');
   if (needFetch(c.latitude, c.longitude)) fetchWays(c.latitude, c.longitude);
 
-  const m = st.ways.length ? matchLimit(c.latitude, c.longitude, st.heading) : null;
+  ttLookup(c.latitude, c.longitude, st.heading);
+  const osm = st.ways.length ? matchLimit(c.latitude, c.longitude, st.heading) : null;
+  const tt = ttFresh();
+  D.src = tt ? 'TomTom' : (osm && osm.lim ? 'OpenStreetMap' : '—');
+  const m = tt ? {lim: tt} : osm;
   if (m && m.lim){
     // require 2 consecutive agreeing fixes before switching, to ignore ramps / side roads
     if (m.lim === st.limit){ st.limitTime = now; st.candidate=null; st.candCount=0; }
