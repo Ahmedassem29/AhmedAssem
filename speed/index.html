@@ -620,7 +620,7 @@ function ensureMap(){
   liveMap = L.map('liveMap', {zoomControl: false, attributionControl: true}).setView(c, 16);
   if (TT_KEY){
     L.tileLayer(`https://api.tomtom.com/map/1/tile/basic/night/{z}/{x}/{y}.png?key=${TT_KEY}&tileSize=256`, {maxZoom: 20, attribution: '© TomTom'}).addTo(liveMap);
-    L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/flow/relative/{z}/{x}/{y}.png?key=${TT_KEY}&tileSize=256&thickness=6`, {maxZoom: 20, opacity: .9}).addTo(liveMap);
+    L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/flow/relative/{z}/{x}/{y}.png?key=${TT_KEY}&tileSize=256&thickness=3`, {maxZoom: 20, opacity: .8}).addTo(liveMap);
   } else {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(liveMap);
   }
