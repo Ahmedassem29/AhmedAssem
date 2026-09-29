@@ -685,8 +685,8 @@ function showTrip(id){
   const body = $('tripsBody');
   body.innerHTML = `<div id="tripMap"></div>
     <div class="kv">
-      <span>${t('started')}</span><div>${fmtTime(tr.start)} · <a href="${mapsLink(p0)}" target="_blank" rel="noopener">${p0[0]}, ${p0[1]}</a></div>
-      <span>${t('ended')}</span><div>${fmtTime(tr.end)} · <a href="${mapsLink(p1)}" target="_blank" rel="noopener">${p1[0]}, ${p1[1]}</a></div>
+      <span>${t('started')}</span><div>${fmtTime(tr.start)} · <a href="${mapsLink(p0)}" target="_blank" rel="noopener" dir="ltr">${p0[0]}, ${p0[1]}</a></div>
+      <span>${t('ended')}</span><div>${fmtTime(tr.end)} · <a href="${mapsLink(p1)}" target="_blank" rel="noopener" dir="ltr">${p1[0]}, ${p1[1]}</a></div>
       <span>${t('duration')}</span><div>${fmtDur(tr.end-tr.start)}</div>
       <span>${t('distance')}</span><div>${fmtKm(tr.dist)}</div>
       <span>${t('maxSpeed')}</span><div>${tr.max} ${t('km')}/${t('hr')}</div>
