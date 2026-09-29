@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="نبّهني">
+<meta name="theme-color" content="#0a0e11">
+<title>نبّهني · SpeedDrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap">
+<style>
+/* Layout: one-screen dashboard — huge current speed, UAE-style limit sign beside it, status strip, controls at the bottom. Dark-only by design (night driving). */
+:root{
+  --bg:#0a0e11; --panel:#141a1f; --line:#232c33;
+  --fg:#eef2f3; --muted:#86939a;
+  --ok:#2fd27a; --warn:#ffb020; --danger:#ff3b3b;
+  --sign-red:#d71920; --sign-bg:#ffffff; --sign-fg:#111111;
+  --f-num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-ar:"IBM Plex Sans Arabic","Geeza Pro",Tahoma,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ar);
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 12px);
+  display:flex;flex-direction:column;gap:14px;overflow:hidden;user-select:none;transition:background .25s}
+body.alarm{background:#3a0b0d}
+body.flash{animation:flash .5s 4}
+@keyframes flash{50%{background:#8a1116}}
+@media (prefers-reduced-motion:reduce){body.flash{animation:none;background:#5a0e12}}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.dots{display:flex;gap:14px;flex-wrap:wrap}
+.dot{display:inline-flex;align-items:center;gap:6px}
+.dot i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on i{background:var(--ok)} .dot.bad i{background:var(--danger)} .dot.wait i{background:var(--warn)}
+.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:8px 12px;font:600 14px var(--f-ar)}
+
+.main{flex:1;display:flex;align-items:center;justify-content:space-around;gap:12px;min-height:0;flex-wrap:wrap}
+.speed{text-align:center;min-width:0}
+.speed .n{font:800 clamp(120px,38vw,220px)/.85 var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:-2px;transition:color .2s}
+.speed .u{color:var(--muted);font-size:15px;margin-top:6px}
+.sign-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.sign{width:clamp(120px,34vw,180px);aspect-ratio:1;max-width:100%;border-radius:50%;background:var(--sign-bg);
+  border:clamp(12px,3.6vw,18px) solid var(--sign-red);display:grid;place-items:center;
+  font:800 clamp(52px,15vw,82px)/1 var(--f-num);color:var(--sign-fg);font-variant-numeric:tabular-nums;transition:transform .2s}
+.sign.stale{opacity:.45}
+.sign.pop{transform:scale(1.12)}
+.allowed{font-size:14px;color:var(--muted);text-align:center}
+.allowed b{color:var(--fg);font:700 20px var(--f-num)}
+
+.strip{border-radius:16px;padding:14px 16px;text-align:center;font-weight:700;font-size:20px;background:var(--panel);border:1px solid var(--line);transition:background .2s,color .2s}
+.strip.ok{color:var(--ok)} .strip.warn{background:var(--warn);color:#1a1200;border-color:var(--warn)}
+.strip.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+.manual{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.manual::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:9px 14px;font:700 17px var(--f-num)}
+.chip.ar{font:600 14px var(--f-ar)}
+.chip.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.lbl{font-size:12px;color:var(--muted);letter-spacing:.3px}
+
+/* start overlay */
+.start{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;justify-content:center;gap:22px;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);z-index:5}
+.start h1{font-size:34px;margin:0;text-wrap:balance}
+.start p{margin:0;color:var(--muted);line-height:1.7;max-width:34em}
+.big{background:var(--ok);color:#03210f;border:0;border-radius:18px;padding:20px;font:700 22px var(--f-ar)}
+.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:14px;font:600 16px var(--f-ar)}
+.err{color:var(--danger);min-height:1.2em}
+
+/* settings sheet */
+.sheet{position:fixed;inset:auto 0 0 0;background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:20px 16px calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:18px;z-index:6;max-height:85%;overflow:auto}
+.row{display:flex;flex-direction:column;gap:8px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:64px;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:12px 8px;font:600 16px var(--f-ar)}
+.seg button.sel{background:var(--fg);color:var(--bg)}
+.note{font-size:13px;color:var(--muted);line-height:1.7}
+button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="dots">
+    <span class="dot" id="dGps"><i></i>GPS</span>
+    <span class="dot" id="dMap"><i></i><span data-t="map"></span></span>
+    <span class="dot" id="dWake"><i></i><span data-t="screen"></span></span>
+  </div>
+  <div style="display:flex;gap:8px"><button class="iconbtn" id="btnLang" type="button">EN</button><button class="iconbtn" id="btnSettings" type="button" data-t="settings"></button></div>
+</div>
+
+<div class="main">
+  <div class="speed">
+    <div class="n" id="speed">0</div>
+    <div class="u" data-t="yourSpeed"></div>
+  </div>
+  <div class="sign-wrap">
+    <div class="sign stale" id="sign">–</div>
+    <div class="allowed"><span data-t="allowedTo"></span> <b id="allowed">–</b></div>
+  </div>
+</div>
+
+<div class="strip" id="strip"></div>
+
+<div class="row">
+  <span class="lbl" data-t="manualLbl"></span>
+  <div class="manual" id="manual"></div>
+</div>
+
+<div class="start" id="start">
+  <div class="seg" id="segLangStart" style="max-width:260px"></div>
+  <h1 data-t="h1"></h1>
+  <p data-t="intro"></p>
+  <button class="big" id="btnStart" type="button" data-t="start"></button>
+  <button class="ghost" id="btnDemo" type="button" data-t="demo"></button>
+  <div class="err" id="err"></div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="row">
+    <span class="lbl" data-t="tolLbl"></span>
+    <div class="seg" id="segTol"></div>
+    <div class="note" data-t="tolNote"></div>
+  </div>
+  <div class="row">
+    <span class="lbl" data-t="langLbl"></span>
+    <div class="seg" id="segLang"></div>
+  </div>
+  <div class="row">
+    <span class="lbl" data-t="soundLbl"></span>
+    <div class="seg" id="segVoice"></div>
+  </div>
+  <div class="row">
+    <span class="lbl" data-t="anyLbl"></span>
+    <div class="seg" id="segAny"></div>
+  </div>
+  <button class="big" id="btnTest" type="button" style="background:var(--warn);color:#1a1200" data-t="test"></button>
+  <button class="ghost" id="btnClose" type="button" data-t="done"></button>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('nb_'+k); return v===null? d : JSON.parse(v);}catch(e){return d;} },
+  set(k, v){ try{ localStorage.setItem('nb_'+k, JSON.stringify(v)); }catch(e){} }
+};
+const S = {
+  tol: store.get('tol', 20),
+  voice: store.get('voice', 'voice'),   // voice | beep | off
+  anyChange: store.get('any', true),
+  lang: store.get('lang', 'ar'),
+};
+const TX = {
+ ar:{map:'بيانات الطريق',screen:'الشاشة',settings:'الإعدادات',yourSpeed:'سرعتك كم/س',allowedTo:'مسموح لحد',
+  manualLbl:'لو الحد غلط أو مش ظاهر، اختاره بإيدك',h1:'نبّهني لما السرعة تنزل',
+  intro:'بيقرا سرعتك من GPS وحد السرعة من خريطة الطريق، ولو الحد نزل وإنت لسه فوق المسموح بيقولّك بصوت ويصفّر. سيب الصفحة دي مفتوحة على الموبايل، وWaze شغّال على CarPlay زي ما هو.',
+  start:'ابدأ',demo:'جرّب التنبيه (محاكاة)',tolLbl:'هامش السماح فوق الحد',
+  tolNote:'التنبيه بيشتغل لما سرعتك تعدّي (الحد + الهامش). الهامش مش ثابت في كل الطرق والإمارات، فالأسلم تقلّله.',
+  soundLbl:'الصوت',anyLbl:'تنبيه عند أي تغيير في الحد (حتى لو زاد)',langLbl:'اللغة',test:'اسمع التنبيه',done:'تمام',
+  none:'بدون',vBoth:'صوت + صفارة',vBeep:'صفارة بس',vOff:'صامت',yes:'أيوه',onlyDown:'لما يقل بس',auto:'تلقائي',
+  waitGps:'مستني إشارة GPS…',noLimit:'مش لاقي حد السرعة هنا، اختاره بإيدك',
+  over:(l,s)=>`خفّف! الحد ${l} وإنت ${s}`,inMargin:m=>`فوق الحد، جوّه الهامش (لحد ${m})`,ok:'تمام، ضمن الحد',
+  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,
+  locOff:'الموقع مقفول. فعّله من الإعدادات ← الخصوصية ← خدمات الموقع ← Safari',locErr:'مش قادر يجيب الموقع، جرّب تاني',
+  demoEnd:'خلصت التجربة. اعمل Reload للصفحة وابدأ'},
+ en:{map:'Road data',screen:'Screen',settings:'Settings',yourSpeed:'Your speed km/h',allowedTo:'Allowed up to',
+  manualLbl:'Limit wrong or missing? Pick it yourself',h1:'Alert me when the limit drops',
+  intro:'Reads your speed from GPS and the speed limit from the road map. If the limit drops while you are still above the allowed speed, it tells you out loud and beeps. Keep this page open on your phone; Waze keeps running on CarPlay as usual.',
+  start:'Start',demo:'Try the alert (simulation)',tolLbl:'Margin above the limit',
+  tolNote:'The alert fires when your speed passes (limit + margin). The margin is not the same on every road and emirate, so a smaller one is safer.',
+  soundLbl:'Sound',anyLbl:'Alert on any limit change (even when it goes up)',langLbl:'Language',test:'Hear the alert',done:'Done',
+  none:'None',vBoth:'Voice + beep',vBeep:'Beep only',vOff:'Silent',yes:'Yes',onlyDown:'Only when it drops',auto:'Auto',
+  waitGps:'Waiting for GPS…',noLimit:'No speed limit found here. Pick it yourself',
+  over:(l,s)=>`Slow down! Limit ${l}, you are at ${s}`,inMargin:m=>`Above the limit, within margin (up to ${m})`,ok:'Good, within the limit',
+  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,
+  locOff:'Location is off. Turn it on in Settings > Privacy > Location Services > Safari',locErr:'Could not get your location, try again',
+  demoEnd:'Demo finished. Reload the page to start'}
+};
+const t = k => TX[S.lang][k];
+function applyLang(){
+  const ar = S.lang==='ar';
+  document.documentElement.lang = S.lang; document.documentElement.dir = ar?'rtl':'ltr';
+  document.querySelectorAll('[data-t]').forEach(el=>{ el.textContent = t(el.dataset.t); });
+  document.getElementById('btnLang').textContent = ar ? 'EN' : 'ع';
+  pickVoice && pickVoice();
+}
+const st = {
+  speed: 0, heading: null, lat: null, lon: null, lastFix: null,
+  limit: null, limitTime: 0, candidate: null, candCount: 0,
+  manual: null, ways: [], bbox: null, fetching: false,
+  lastOverBeep: 0, demo: false
+};
+
+/* ---------- audio ---------- */
+let ac = null;
+function unlockAudio(){
+  try{ if (navigator.audioSession) navigator.audioSession.type = 'playback'; }catch(e){}
+  try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); ac.resume(); }catch(e){}
+  try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }catch(e){}
+}
+function beep(freq=880, dur=.16, n=3, gap=.1){
+  if (!ac || S.voice==='off') return;
+  let t = ac.currentTime + .02;
+  for (let i=0;i<n;i++){
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type='square'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.35,t+.01); g.gain.linearRampToValueAtTime(0,t+dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur+.02);
+    t += dur+gap;
+  }
+}
+let arVoice = null;
+function pickVoice(){
+  try{ const vs = speechSynthesis.getVoices(); arVoice = S.lang==='ar' ? (vs.find(v=>/^ar[-_]?AE/i.test(v.lang)) || vs.find(v=>/^ar/i.test(v.lang)) || null) : (vs.find(v=>/^en[-_]?(GB|US|AU)/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null); }catch(e){}
+}
+try{ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }catch(e){}
+function say(text){
+  if (S.voice!=='voice') return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = arVoice ? arVoice.lang : (S.lang==='ar'?'ar-SA':'en-US'); if (arVoice) u.voice = arVoice;
+    u.rate = 1.05; u.volume = 1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------- wake lock ---------- */
+let wl = null;
+async function keepAwake(){
+  try{
+    if (!('wakeLock' in navigator)) { setDot('dWake','bad'); return; }
+    wl = await navigator.wakeLock.request('screen');
+    setDot('dWake','on');
+    wl.addEventListener('release', ()=> setDot('dWake','wait'));
+  }catch(e){ setDot('dWake','bad'); }
+}
+
+function setDot(id, s){ const el=$(id); el.classList.remove('on','bad','wait'); if(s) el.classList.add(s); }
+
+/* ---------- geo math ---------- */
+const R = 6371000, rad = d=>d*Math.PI/180;
+function toXY(lat, lon, lat0, lon0){ return [rad(lon-lon0)*R*Math.cos(rad(lat0)), rad(lat-lat0)*R]; }
+function bearing(a, b){ // from xy a to xy b, degrees from north
+  let d = Math.atan2(b[0]-a[0], b[1]-a[1])*180/Math.PI; return (d+360)%360;
+}
+function angDiff(a,b){ let d=Math.abs(a-b)%360; return d>180?360-d:d; }
+function parseLimit(v){
+  if (!v) return null;
+  const m = String(v).match(/(\d+)/); if(!m) return null;
+  let n = +m[1]; if (/mph/i.test(v)) n = Math.round(n*1.609);
+  return (n>=10 && n<=160) ? n : null;
+}
+
+/* ---------- map data (OpenStreetMap / Overpass) ---------- */
+const ENDPOINTS = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+const HALF = 0.018; // ~2 km each side
+async function fetchWays(lat, lon){
+  if (st.fetching) return; st.fetching = true; setDot('dMap','wait');
+  const s=lat-HALF, n=lat+HALF, w=lon-HALF, e=lon+HALF;
+  const hw = '^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|unclassified|residential)$';
+  const q = `[out:json][timeout:25];way["highway"~"${hw}"](${s},${w},${n},${e});out tags geom;`;
+  for (const ep of ENDPOINTS){
+    try{
+      const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 25000);
+      const r = await fetch(ep, {method:'POST', body:'data='+encodeURIComponent(q), headers:{'Content-Type':'application/x-www-form-urlencoded'}, signal:ctl.signal});
+      clearTimeout(t);
+      if (!r.ok) continue;
+      const j = await r.json();
+      st.ways = j.elements.filter(x=>x.geometry && x.geometry.length>1).map(x=>({
+        g: x.geometry, oneway: x.tags.oneway==='yes' || /^motorway/.test(x.tags.highway),
+        rev: x.tags.oneway==='-1',
+        lim: parseLimit(x.tags.maxspeed), fwd: parseLimit(x.tags['maxspeed:forward']), bwd: parseLimit(x.tags['maxspeed:backward'])
+      }));
+      st.bbox = {s,n,w,e}; st.fetching = false; setDot('dMap','on'); return;
+    }catch(err){ /* try next */ }
+  }
+  st.fetching = false; setDot('dMap','bad');
+}
+function needFetch(lat, lon){
+  const b = st.bbox; if (!b) return true;
+  const m = 0.007; // refetch when within ~750 m of the edge
+  return lat < b.s+m || lat > b.n-m || lon < b.w+m || lon > b.e-m;
+}
+function matchLimit(lat, lon, heading){
+  let best = null, bestScore = 1e9;
+  for (const w of st.ways){
+    for (let i=0;i<w.g.length-1;i++){
+      const a = toXY(w.g[i].lat, w.g[i].lon, lat, lon), b = toXY(w.g[i+1].lat, w.g[i+1].lon, lat, lon);
+      const dx=b[0]-a[0], dy=b[1]-a[1], L2=dx*dx+dy*dy; if (!L2) continue;
+      let t = -(a[0]*dx + a[1]*dy)/L2; t = Math.max(0, Math.min(1, t));
+      const px=a[0]+t*dx, py=a[1]+t*dy, dist=Math.hypot(px,py);
+      if (dist > 30) continue;
+      let score = dist, forward = true;
+      if (heading!=null){
+        const br = bearing(a,b), d = angDiff(br, heading);
+        forward = d < 90;
+        const aligned = w.oneway ? (w.rev ? d>145 : d<35) : (d<35 || d>145);
+        score += aligned ? 0 : 80;
+      }
+      if (score < bestScore){
+        bestScore = score;
+        const lim = (forward ? w.fwd : w.bwd) || w.lim;
+        best = {lim, score};
+      }
+    }
+  }
+  return best && best.score <= 40 ? best : null;
+}
+
+/* ---------- UI ---------- */
+const CHIPS = [40,60,80,100,110,120,140];
+function buildManual(){
+  const box = $('manual'); box.innerHTML='';
+  const auto = document.createElement('button'); auto.type='button'; auto.className='chip ar'+(st.manual==null?' sel':''); auto.textContent=t('auto');
+  auto.onclick = ()=>{ st.manual=null; buildManual(); render(); };
+  box.appendChild(auto);
+  for (const c of CHIPS){
+    const b = document.createElement('button'); b.type='button'; b.className='chip'+(st.manual===c?' sel':''); b.textContent=c;
+    b.onclick = ()=>{ const old = effLimit(); st.manual=c; buildManual(); onLimitChange(old, c); render(); };
+    box.appendChild(b);
+  }
+}
+function seg(id, opts, cur, set){
+  const box=$(id); box.innerHTML='';
+  for (const [v,label] of opts){
+    const b=document.createElement('button'); b.type='button'; b.textContent=label; if (v===cur) b.className='sel';
+    b.onclick=()=>{ set(v); seg(id,opts,v,set); render(); };
+    box.appendChild(b);
+  }
+}
+function buildSettings(){
+  seg('segTol', [[0,t('none')],[10,'+10'],[15,'+15'],[20,'+20']], S.tol, v=>{S.tol=v;store.set('tol',v);});
+  seg('segVoice', [['voice',t('vBoth')],['beep',t('vBeep')],['off',t('vOff')]], S.voice, v=>{S.voice=v;store.set('voice',v);});
+  seg('segLang', [['ar','العربية'],['en','English']], S.lang, setLang);
+  seg('segAny', [[true,t('yes')],[false,t('onlyDown')]], S.anyChange, v=>{S.anyChange=v;store.set('any',v);});
+}
+function effLimit(){ return st.manual!=null ? st.manual : st.limit; }
+
+function render(){
+  const lim = effLimit(), spd = Math.round(st.speed);
+  $('speed').textContent = spd;
+  const sign = $('sign');
+  sign.textContent = lim ?? '–';
+  sign.classList.toggle('stale', lim==null || (st.manual==null && Date.now()-st.limitTime > 20000));
+  $('allowed').textContent = lim!=null ? (lim + S.tol) : '–';
+  const strip = $('strip'); strip.className='strip';
+  document.body.classList.remove('alarm');
+  if (!st.lastFix && !st.demo){ strip.textContent=t('waitGps'); return; }
+  if (lim==null){ strip.textContent=t('noLimit'); $('speed').style.color=''; return; }
+  const max = lim + S.tol;
+  if (spd > max){ strip.classList.add('danger'); strip.textContent=t('over')(lim,spd); $('speed').style.color='var(--danger)'; document.body.classList.add('alarm'); }
+  else if (spd > lim){ strip.classList.add('warn'); strip.textContent=t('inMargin')(max); $('speed').style.color='var(--warn)'; }
+  else { strip.classList.add('ok'); strip.textContent=t('ok'); $('speed').style.color='var(--ok)'; }
+}
+
+function onLimitChange(oldL, newL){
+  if (newL==null || oldL===newL) return;
+  const sign=$('sign'); sign.classList.add('pop'); setTimeout(()=>sign.classList.remove('pop'), 400);
+  if (oldL==null){ if (S.anyChange) say(t('sayLimit')(newL)); return; }
+  const spd = Math.round(st.speed), max = newL + S.tol;
+  if (newL < oldL){
+    const over = spd > max;
+    document.body.classList.remove('flash'); void document.body.offsetWidth; document.body.classList.add('flash');
+    beep(over?1150:900, .18, over?4:2);
+    setTimeout(()=> say(over ? t('sayDropOver')(newL,max) : t('sayDrop')(newL)), over?1300:700);
+    st.lastOverBeep = Date.now();
+  } else if (S.anyChange){
+    beep(660,.12,1); setTimeout(()=>say(t('sayUp')(newL)),250);
+  }
+}
+
+function checkOver(){
+  const lim = effLimit(); if (lim==null) return;
+  if (st.speed > lim + S.tol && Date.now()-st.lastOverBeep > 6000){
+    st.lastOverBeep = Date.now(); beep(1150,.14,2,.08);
+  }
+}
+
+/* ---------- GPS ---------- */
+let prev = null;
+function onPos(p){
+  if (st.demo) return;
+  const c = p.coords, now = p.timestamp || Date.now();
+  let spd = (c.speed!=null && c.speed>=0) ? c.speed*3.6 : null;
+  let hd = (c.heading!=null && !isNaN(c.heading) && c.heading>=0) ? c.heading : null;
+  if (prev){
+    const a = toXY(prev.lat, prev.lon, c.latitude, c.longitude), dt=(now-prev.t)/1000;
+    const d = Math.hypot(a[0],a[1]);
+    if (spd==null && dt>0) spd = d/dt*3.6;
+    if (hd==null && d>8) hd = bearing(a,[0,0]);
+  }
+  prev = {lat:c.latitude, lon:c.longitude, t:now};
+  st.speed = spd ?? 0; st.heading = (st.speed>8) ? hd : null;
+  st.lat=c.latitude; st.lon=c.longitude; st.lastFix=now;
+  setDot('dGps', c.accuracy < 30 ? 'on' : 'wait');
+  if (needFetch(c.latitude, c.longitude)) fetchWays(c.latitude, c.longitude);
+
+  const m = st.ways.length ? matchLimit(c.latitude, c.longitude, st.heading) : null;
+  if (m && m.lim){
+    // require 2 consecutive agreeing fixes before switching, to ignore ramps / side roads
+    if (m.lim === st.limit){ st.limitTime = now; st.candidate=null; st.candCount=0; }
+    else {
+      if (m.lim === st.candidate) st.candCount++; else { st.candidate=m.lim; st.candCount=1; }
+      if (st.candCount >= 2 || st.limit==null){
+        const old = effLimit(); st.limit = m.lim; st.limitTime=now; st.candidate=null; st.candCount=0;
+        if (st.manual==null) onLimitChange(old, st.limit);
+      }
+    }
+  }
+  checkOver(); render();
+}
+function onErr(e){
+  setDot('dGps','bad');
+  $('strip').textContent = e.code===1 ? t('locOff') : t('locErr');
+}
+
+/* ---------- demo ---------- */
+function runDemo(){
+  st.demo = true; st.lastFix = null; st.manual = null;
+  const steps = [[125,120],[130,120],[130,120],[131,100],[128,100],[118,100],[110,100],[112,100],[115,120]];
+  let i=0, lastL=null;
+  const tick = ()=>{
+    if (i>=steps.length){ st.demo=false; st.limit=null; st.speed=0; render(); $('strip').textContent=t('demoEnd'); return; }
+    const [s,l] = steps[i++]; st.speed=s; const old=st.limit; st.limit=l; st.limitTime=Date.now();
+    if (old!==l) onLimitChange(old, l); checkOver(); render(); setTimeout(tick, 2200);
+  };
+  tick();
+}
+
+/* ---------- start ---------- */
+function start(demo){
+  unlockAudio(); keepAwake();
+  $('start').hidden = true;
+  buildManual(); render();
+  if (demo){ runDemo(); return; }
+  if (!('geolocation' in navigator)){ onErr({code:0}); return; }
+  navigator.geolocation.watchPosition(onPos, onErr, {enableHighAccuracy:true, maximumAge:0, timeout:15000});
+}
+$('btnStart').onclick = ()=>start(false);
+$('btnDemo').onclick = ()=>start(true);
+$('btnSettings').onclick = ()=>{ buildSettings(); $('sheet').hidden=false; };
+$('btnClose').onclick = ()=>{ $('sheet').hidden=true; };
+$('btnTest').onclick = ()=>{ unlockAudio(); beep(1150,.18,4); setTimeout(()=>say(t('sayDropOver')(100,100+S.tol)),1300); };
+document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible' && $('start').hidden) keepAwake(); });
+function setLang(v){ S.lang=v; store.set('lang',v); applyLang(); buildSettings(); buildManual(); seg('segLangStart', [['ar','العربية'],['en','English']], v, setLang); render(); }
+$('btnLang').onclick = ()=> setLang(S.lang==='ar'?'en':'ar');
+seg('segLangStart', [['ar','العربية'],['en','English']], S.lang, setLang);
+applyLang(); buildSettings(); render();
+})();
+</script>
+</body>
+</html>
