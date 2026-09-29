@@ -85,6 +85,13 @@ body.flash{animation:flash .5s 4}
 .seg button.sel{background:var(--fg);color:var(--bg)}
 .note{font-size:13px;color:var(--muted);line-height:1.7}
   .diag{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.7 ui-monospace,Menlo,monospace;color:var(--fg);white-space:pre-wrap;direction:ltr;text-align:left;max-height:40vh;overflow:auto}
+/* live map */
+.mappanel{flex:1;position:relative;min-height:0;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--panel)}
+#liveMap{position:absolute;inset:0;background:#1b2126}
+.mapover{position:absolute;top:10px;inset-inline-start:10px;z-index:500;display:flex;gap:10px;align-items:center;pointer-events:none}
+.mspeed{font:800 46px/1 var(--f-num);font-variant-numeric:tabular-nums;background:rgba(10,14,17,.82);color:var(--fg);padding:6px 12px 8px;border-radius:14px;min-width:84px;text-align:center}
+.msign{width:66px;height:66px;border-radius:50%;background:#fff;border:8px solid var(--sign-red);display:grid;place-items:center;font:800 28px var(--f-num);color:#111;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.recenter{position:absolute;bottom:14px;inset-inline-end:14px;z-index:500;width:48px;height:48px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);font-size:24px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 /* trips history */
 .trips{position:fixed;inset:0;background:var(--bg);z-index:9;display:flex;flex-direction:column;
   padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 12px);gap:12px}
@@ -116,10 +123,10 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
     <span class="dot" id="dMap"><i></i><span data-t="map"></span></span>
     <span class="dot" id="dWake"><i></i><span data-t="screen"></span></span>
   </div>
-  <div style="display:flex;gap:8px"><button class="iconbtn" id="btnLang" type="button">EN</button><button class="iconbtn" id="btnTrips" type="button" data-t="trips"></button><button class="iconbtn" id="btnSettings" type="button" data-t="settings"></button></div>
+  <div style="display:flex;gap:8px"><button class="iconbtn" id="btnLang" type="button">EN</button><button class="iconbtn" id="btnMap" type="button"></button><button class="iconbtn" id="btnTrips" type="button" data-t="trips"></button><button class="iconbtn" id="btnSettings" type="button" data-t="settings"></button></div>
 </div>
 
-<div class="main">
+<div class="main" id="gauge">
   <div class="speed">
     <div class="n" id="speed">0</div>
     <div class="u" data-t="yourSpeed"></div>
@@ -130,6 +137,11 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
   </div>
 </div>
 
+<div class="mappanel" id="mapPanel" hidden>
+  <div id="liveMap"></div>
+  <div class="mapover"><div class="mspeed" id="mSpeed">0</div><div class="msign" id="mSign">–</div></div>
+  <button class="recenter" id="btnRecenter" type="button" hidden aria-label="Recenter">◎</button>
+</div>
 <div class="strip" id="strip"></div>
 <button class="ghost" id="btnDiag" type="button" data-t="diagBtn" style="padding:8px"></button>
 <pre class="diag" id="diag" hidden></pre>
@@ -199,7 +211,7 @@ const TX = {
   none:'بدون',vBoth:'صوت + صفارة',vBeep:'صفارة بس',vOff:'صامت',yes:'أيوه',onlyDown:'لما يقل بس',auto:'تلقائي',
   waitGps:'مستني إشارة GPS…',noLimit:'مش لاقي حد السرعة هنا، اختاره بإيدك',
   over:(l,s)=>`خفّف! الحد ${l} وإنت ${s}`,inMargin:m=>`فوق الحد، جوّه الهامش (لحد ${m})`,ok:'تمام، ضمن الحد',
-  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,diagBtn:'فحص: هو شايف إيه؟',trips:'الرحلات',tripsLong:'سجل الرحلات',back:'رجوع',close:'قفل',
+  sayLimit:l=>`حد السرعة ${l}`,sayDropOver:(l,m)=>`انتبه، السرعة نزلت ${l}. خفّف لـ ${m}`,sayDrop:l=>`السرعة نزلت ${l}`,sayUp:l=>`السرعة ${l}`,diagBtn:'فحص: هو شايف إيه؟',mapBtn:'خريطة',gaugeBtn:'العدّاد',trips:'الرحلات',tripsLong:'سجل الرحلات',back:'رجوع',close:'قفل',
   tripsTitle:'سجل الرحلات',noTrips:'لسه مفيش رحلات. أول ما تدوس ابدأ وتتحرك، الرحلة هتتسجّل هنا.<br>السجل محفوظ على الموبايل ده بس.',
   started:'البداية',ended:'النهاية',duration:'المدة',distance:'المسافة',maxSpeed:'أعلى سرعة',alerts:'تنبيهات السرعة',
   roadsLbl:'الطرق',noRoads:'مفيش أسماء طرق متسجّلة',delTrip:'امسح الرحلة',delAll:'امسح الكل',sure:'متأكد؟ دوس تاني',
@@ -215,7 +227,7 @@ const TX = {
   none:'None',vBoth:'Voice + beep',vBeep:'Beep only',vOff:'Silent',yes:'Yes',onlyDown:'Only when it drops',auto:'Auto',
   waitGps:'Waiting for GPS…',noLimit:'No speed limit found here. Pick it yourself',
   over:(l,s)=>`Slow down! Limit ${l}, you are at ${s}`,inMargin:m=>`Above the limit, within margin (up to ${m})`,ok:'Good, within the limit',
-  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,diagBtn:'Check: what does it see?',trips:'Trips',tripsLong:'Trip history',back:'Back',close:'Close',
+  sayLimit:l=>`Speed limit ${l}`,sayDropOver:(l,m)=>`Warning, speed limit dropped to ${l}. Slow down to ${m}`,sayDrop:l=>`Speed limit dropped to ${l}`,sayUp:l=>`Speed limit ${l}`,diagBtn:'Check: what does it see?',mapBtn:'Map',gaugeBtn:'Gauge',trips:'Trips',tripsLong:'Trip history',back:'Back',close:'Close',
   tripsTitle:'Trip history',noTrips:'No trips yet. Press Start and drive; the trip is saved here.<br>History is stored on this phone only.',
   started:'Start',ended:'End',duration:'Duration',distance:'Distance',maxSpeed:'Top speed',alerts:'Speed alerts',
   roadsLbl:'Roads',noRoads:'No road names recorded',delTrip:'Delete trip',delAll:'Delete all',sure:'Sure? Tap again',
@@ -434,14 +446,15 @@ function render(){
   sign.textContent = lim ?? '–';
   sign.classList.toggle('stale', lim==null || (st.manual==null && Date.now()-st.limitTime > 20000));
   $('allowed').textContent = lim!=null ? (lim + S.tol) : '–';
+  $('mSpeed').textContent = spd; $('mSign').textContent = lim ?? '–'; $('mSign').style.opacity = sign.classList.contains('stale') ? .5 : 1;
   const strip = $('strip'); strip.className='strip';
   document.body.classList.remove('alarm');
   if (!st.lastFix && !st.demo){ strip.textContent=t('waitGps'); return; }
   if (lim==null){ strip.textContent=t('noLimit'); $('speed').style.color=''; return; }
   const max = lim + S.tol;
-  if (spd > max){ strip.classList.add('danger'); strip.textContent=t('over')(lim,spd); $('speed').style.color='var(--danger)'; document.body.classList.add('alarm'); }
-  else if (spd > lim){ strip.classList.add('warn'); strip.textContent=t('inMargin')(max); $('speed').style.color='var(--warn)'; }
-  else { strip.classList.add('ok'); strip.textContent=t('ok'); $('speed').style.color='var(--ok)'; }
+  if (spd > max){ strip.classList.add('danger'); strip.textContent=t('over')(lim,spd); $('speed').style.color='var(--danger)'; $('mSpeed').style.color='var(--danger)'; document.body.classList.add('alarm'); }
+  else if (spd > lim){ strip.classList.add('warn'); strip.textContent=t('inMargin')(max); $('speed').style.color='var(--warn)'; $('mSpeed').style.color='var(--warn)'; }
+  else { strip.classList.add('ok'); strip.textContent=t('ok'); $('speed').style.color='var(--ok)'; $('mSpeed').style.color='var(--ok)'; }
 }
 
 function onLimitChange(oldL, newL){
@@ -574,6 +587,7 @@ function onPos(p){
     }
   }
   tripPoint(c.latitude, c.longitude, st.speed, now);
+  updateMap();
   tripRoad(tt ? TT.road : (D.near && D.near.dist < 30 ? D.near.name : ''), effLimit());
   checkOver(); render(); renderDiag();
 }
@@ -595,6 +609,33 @@ function runDemo(){
     if (old!==l) onLimitChange(old, l); checkOver(); render(); setTimeout(tick, 2200);
   };
   tick();
+}
+
+/* ---------- live map (TomTom night map + live traffic; OSM if no key) ---------- */
+let liveMap = null, carMarker = null, follow = true;
+function ensureMap(){
+  if (liveMap || !window.L) return;
+  const c = st.lat != null ? [st.lat, st.lon] : [25.2048, 55.2708];
+  liveMap = L.map('liveMap', {zoomControl: false, attributionControl: true}).setView(c, 16);
+  if (TT_KEY){
+    L.tileLayer(`https://api.tomtom.com/map/1/tile/basic/night/{z}/{x}/{y}.png?key=${TT_KEY}&tileSize=256`, {maxZoom: 20, attribution: '© TomTom'}).addTo(liveMap);
+    L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/flow/relative0-dark/{z}/{x}/{y}.png?key=${TT_KEY}&tileSize=256&thickness=8`, {maxZoom: 20, opacity: .9}).addTo(liveMap);
+  } else {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(liveMap);
+  }
+  carMarker = L.circleMarker(c, {radius: 9, color: '#fff', weight: 3, fillColor: '#2fd27a', fillOpacity: 1}).addTo(liveMap);
+  liveMap.on('dragstart', ()=>{ follow = false; $('btnRecenter').hidden = false; });
+}
+function updateMap(){
+  if (!liveMap || st.lat == null) return;
+  carMarker.setLatLng([st.lat, st.lon]);
+  if (follow) liveMap.panTo([st.lat, st.lon], {animate: true, duration: .8});
+}
+function setMapMode(on){
+  S.map = on; store.set('map', on);
+  $('gauge').hidden = on; $('mapPanel').hidden = !on;
+  $('btnMap').textContent = on ? t('gaugeBtn') : t('mapBtn');
+  if (on){ ensureMap(); setTimeout(()=>{ if (liveMap){ liveMap.invalidateSize(); updateMap(); } }, 60); }
 }
 
 /* ---------- trip history (stored on this phone only) ---------- */
@@ -748,6 +789,8 @@ function start(demo){
 $('btnStart').onclick = ()=>start(false);
 $('btnDemo').onclick = ()=>start(true);
 $('btnTrips').onclick = openTrips;
+$('btnMap').onclick = ()=> setMapMode(!S.map);
+$('btnRecenter').onclick = ()=>{ follow = true; $('btnRecenter').hidden = true; if (liveMap && st.lat != null) liveMap.setView([st.lat, st.lon], Math.max(liveMap.getZoom(), 16)); };
 $('btnTrips2').onclick = openTrips;
 $('btnDiag').onclick = ()=>{ $('diag').hidden = !$('diag').hidden; renderDiag(); };
 $('btnSettings').onclick = ()=>{ buildSettings(); $('sheet').hidden=false; $('backdrop').hidden=false; };
@@ -756,10 +799,10 @@ $('btnClose').onclick = closeSheet;
 $('backdrop').onclick = closeSheet;
 $('btnTest').onclick = ()=>{ unlockAudio(); setTimeout(()=>beep(1150,.18,4),400); setTimeout(()=>say(t('sayDropOver')(100,100+S.tol)),1300); };
 document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible' && $('start').hidden) keepAwake(); });
-function setLang(v){ S.lang=v; store.set('lang',v); applyLang(); buildSettings(); buildManual(); seg('segLangStart', [['ar','العربية'],['en','English']], v, setLang); render(); }
+function setLang(v){ S.lang=v; setTimeout(()=>setMapMode(!!S.map),0); store.set('lang',v); applyLang(); buildSettings(); buildManual(); seg('segLangStart', [['ar','العربية'],['en','English']], v, setLang); render(); }
 $('btnLang').onclick = ()=> setLang(S.lang==='ar'?'en':'ar');
 seg('segLangStart', [['ar','العربية'],['en','English']], S.lang, setLang);
-applyLang(); buildSettings(); render();
+applyLang(); buildSettings(); render(); setMapMode(!!store.get('map', false));
 })();
 </script>
 </body>
