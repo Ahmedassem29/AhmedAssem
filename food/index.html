@@ -142,8 +142,17 @@ textarea.field{min-height:70px;resize:vertical}
 </section>
 
 <script>
-// Live server on Cloudflare (set after it's deployed). Empty = use the saved data for Al Zahya.
-const WORKER = new URLSearchParams(location.search).get("api") || "";
+// Live server on Cloudflare (food-worker/ in this repo). ?api=... overrides it for testing.
+const WORKER = new URLSearchParams(location.search).get("api") || "https://arkhas-akla.ahmedassem29.workers.dev";
+const KEEP_MS = 2 * 3600 * 1000;   // reuse a search on this phone for 2 hours
+function cached(key){ const c = lsGet("c:" + key); return c && Date.now() - c.t < KEEP_MS ? c.d : null; }
+function remember(key, d){ lsSet("c:" + key, { t: Date.now(), d }); }
+async function live(path, key){
+  const hit = cached(key); if (hit) return hit;
+  const d = await fetch(WORKER + path).then(r => r.json());
+  if (d.error) throw new Error(d.error);
+  remember(key, d); return d;
+}
 const HOME = { id: 3986, slug: "al-zahya", name: "Al Zahya", city: "Ajman" };
 const ORDER = [["egyptian","أكل مصري"],["burger","برجر"],["pizza","بيتزا"],["mandi","مندي"],["seafood","سي فود"]];
 const $ = s => document.querySelector(s);
@@ -217,12 +226,17 @@ let foodReq = 0;
 async function loadFood(){
   const a = state.area || HOME, cat = state.cat, key = `${a.id}:${cat}`, my = ++foodReq;
   if (state.food[key]) return renderFood();
-  $("#list").innerHTML = `<div class="status"><span class="spin"></span>بيجيب أسعار ${esc(ORDER.find(o=>o[0]===cat)[1])} من طلبات… أول مرة ممكن تاخد 20 ثانية</div>`;
+  $("#list").innerHTML = `<div class="status"><span class="spin"></span>بيجيب أسعار ${esc(ORDER.find(o=>o[0]===cat)[1])} من طلبات لايف… حوالي 15 ثانية</div>`;
   try {
     let data;
     if (WORKER){
-      data = await fetch(`${WORKER}/food?area=${a.id}&slug=${a.slug}&cat=${cat}`).then(r => r.json());
-      if (data.error) throw new Error(data.error);
+      try {
+        data = await live(`/food?area=${a.id}&slug=${a.slug}&cat=${cat}`, `food:${key}`);
+      } catch (e) {
+        if (a.id !== HOME.id) throw e;   // home area falls back to the saved prices
+        const saved = await fetch(`food-${HOME.id}.json?v=${Date.now()}`).then(r => r.json());
+        data = { ...saved.categories[cat], updated: saved.updated };
+      }
     } else if (a.id === HOME.id){
       const saved = await fetch(`food-${HOME.id}.json?v=${Date.now()}`).then(r => r.json());
       data = { ...saved.categories[cat], updated: saved.updated };
@@ -282,8 +296,7 @@ $("#shopGo").onclick = async () => {
   $("#shopGo").disabled = true;
   $("#shopOut").innerHTML = `<div class="status"><span class="spin"></span>بيقارن السوبرماركتات اللي بتوصّل لـ${esc(a.name)}…</div>`;
   try {
-    const d = await fetch(`${WORKER}/grocery?area=${a.id}&slug=${a.slug}&items=${encodeURIComponent(items)}`).then(r => r.json());
-    if (d.error) throw new Error(d.error);
+    const d = await live(`/grocery?area=${a.id}&slug=${a.slug}&items=${encodeURIComponent(items)}`, `groc:${a.id}:${items}`);
     renderGrocery(d);
   } catch (e) {
     $("#shopOut").innerHTML = `<div class="empty">مقدرتش أقارن دلوقتي: ${esc(e.message)}</div>`;
