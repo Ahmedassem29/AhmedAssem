@@ -1,0 +1,12 @@
+name: food-probe
+on:
+  push:
+    branches: [food-probe]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 food-tool/probe.py
+      - uses: actions/upload-artifact@v4
+        with: { name: probe, path: /tmp/*.json, if-no-files-found: ignore }
