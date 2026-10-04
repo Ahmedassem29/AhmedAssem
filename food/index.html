@@ -351,7 +351,6 @@ locate();
 <script>
 // Talabat won't let a web link open its app on a restaurant (even its own share links open the
 // website). So a tap copies the name, opens the app with talabat://, and you paste it in search.
-// If the app isn't installed (page still visible after a moment), fall back to the website.
 document.addEventListener("click", async e => {
   const a = e.target.closest("a[data-copy]"); if (!a) return;
   e.preventDefault();
@@ -360,11 +359,7 @@ document.addEventListener("click", async e => {
   const t = document.getElementById("toast");
   t.innerHTML = `اتنسخ <b>${name.replace(/[<>&]/g, "")}</b>. في طلبات دوس بحث والصق${item && a.classList.contains("card") ? `، واطلب <b>${item.replace(/[<>&]/g, "")}</b>` : ""}.`;
   t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 6000);
-  const web = a.href;
-  setTimeout(() => {
-    location.href = "talabat://";
-    setTimeout(() => { if (!document.hidden) window.open(web, "_blank", "noopener"); }, 2500);
-  }, 700);
+  setTimeout(() => { location.href = "talabat://"; }, 700);
 });
 </script>
 </body>
