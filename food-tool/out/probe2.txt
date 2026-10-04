@@ -1,0 +1,37 @@
+{
+  "ip": "52.190.183.89",
+  "city": "San Jose",
+  "region": "California",
+  "country": "US",
+  "loc": "37.3394,-121.8950",
+  "org": "AS8075 Microsoft Corporation",
+  "postal": "95110",
+  "timezone": "America/Los_Angeles",
+  "readme": "https://ipinfo.io/missingauth"
+}
+=== https://food.noon.com/_svc/mp-food-api-catalog/api/search?f%5Bcuisines%5D=pizza&type=outlet
+curl: (92) HTTP/2 stream 1 was not closed cleanly: INTERNAL_ERROR (err 2)
+HTTP 000 0B 0.108340s
+head: cannot open '/tmp/b' for reading: No such file or directory
+
+=== https://food.noon.com/_svc/mp-food-api-catalog/api/canonical-zones
+curl: (92) HTTP/2 stream 1 was not closed cleanly: INTERNAL_ERROR (err 2)
+HTTP 000 0B 0.040076s
+head: cannot open '/tmp/b' for reading: No such file or directory
+
+=== https://food.noon.com/uae-en/
+curl: (92) HTTP/2 stream 1 was not closed cleanly: INTERNAL_ERROR (err 2)
+HTTP 000 0B 0.049595s
+head: cannot open '/tmp/b' for reading: No such file or directory
+
+=== https://www.noon.com/_svc/catalog/api/v3/u/search?q=milk&limit=5
+curl: (92) HTTP/2 stream 1 was not closed cleanly: INTERNAL_ERROR (err 2)
+HTTP 000 0B 0.065963s
+head: cannot open '/tmp/b' for reading: No such file or directory
+
+=== https://minutes.noon.com/
+HTTP 403 5748B 0.055927s
+<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-PzK8TAXdaZWolCpJujQvkb&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges
+=== https://www.talabat.com/uae/grocery/651480/talabat-mart?aid=3986
+HTTP 200 236965B 0.976992s
+<!DOCTYPE html><html lang="en" dir="ltr"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="theme-color" content="#f55905"/><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/><link rel="apple-touch-startup-image" href="/favicon.ico"/><link rel="apple-touch-icon" href="/favicon.ico"/><link rel="shortcut icon" href="/favicon.ico"/><meta property="apple-itunes-app" content="app-id=451001072, app-argument=talabat://"/><meta property="al:ios:url" content="talabat://"/><meta property="al:ios:app_store_id" content="4510010
