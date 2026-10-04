@@ -12,7 +12,7 @@ const FOOD_TTL = 3 * 3600;      // seconds
 const GROCERY_TTL = 6 * 3600;
 const MAX_MENUS = 24;            // free plan allows 50 outbound requests per call
 const MAX_STORES = 5;
-const REQUEST_BUDGET = 47;       // keep under the 50 outbound requests limit
+const REQUEST_BUDGET = 46;       // keep under the 50 outbound requests limit
 
 // talabat pro rules learned from real carts
 const PRO_FREE_DELIVERY_MIN = 30, DELIVERY_FALLBACK = 6.9;
@@ -76,17 +76,13 @@ const num = x => { const n = parseFloat(x); return Number.isFinite(n) ? n : 0; }
 const unescape = s => String(s || "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
 
 async function page(url, ctx, ttl) {
-  // HTML page -> __NEXT_DATA__.props.pageProps, cached at the edge
-  const cache = caches.default;
-  const key = new Request(url);
-  let res = await cache.match(key);
-  if (!res) {
-    res = await fetch(url, { headers: { "User-Agent": UA, "Accept": "text/html", "Accept-Language": "en-US,en;q=0.9" } });
-    if (!res.ok) { ERRORS.push(`${res.status} ${url.slice(25, 110)}`); throw new Error(`talabat ${res.status}`); }
-    const body = await res.text();
-    res = new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}` } });
-    ctx.waitUntil(cache.put(key, res.clone()));
-  }
+  // HTML page -> __NEXT_DATA__.props.pageProps. Cached by Cloudflare's own fetch cache, which
+  // (unlike the Cache API) doesn't count extra against the 50-requests-per-search limit.
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA, "Accept": "text/html", "Accept-Language": "en-US,en;q=0.9" },
+    cf: { cacheTtl: ttl, cacheEverything: true },
+  });
+  if (!res.ok) { ERRORS.push(`${res.status} ${url.slice(25, 110)}`); throw new Error(`talabat ${res.status}`); }
   const html = await res.text();
   const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
   if (!m) throw new Error("no page data");
