@@ -62,6 +62,8 @@ textarea.field{min-height:70px;resize:vertical}
 .toggles{display:flex;gap:16px;margin-top:10px;font-size:14px;color:var(--muted)}
 .toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
 .toggles input{accent-color:var(--accent);width:17px;height:17px}
+.noonbtn{margin-inline-start:auto;flex:none;background:#feee00;color:#1a1a1a;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:700;text-decoration:none}
+.item .noonbtn{float:inline-end;margin-top:2px}
 .go{margin-top:10px;width:100%;border:0;background:var(--accent);color:#fff;border-radius:12px;padding:11px;font-weight:700;font-size:16px;cursor:pointer}
 .go:disabled{opacity:.6}
 .list{display:flex;flex-direction:column;gap:12px;margin-top:6px}
@@ -131,6 +133,7 @@ textarea.field{min-height:70px;resize:vertical}
     <div class="toggles">
       <label><input type="checkbox" id="onlyOffers"> عروض بس</label>
       <label><input type="checkbox" id="onlyOpen" checked> مفتوح دلوقتي</label>
+      <a class="noonbtn" id="noonFood" href="https://food.noon.com/uae-en/" target="_blank" rel="noopener">قارن في نون ↗</a>
     </div>
   </div>
   <main class="list" id="list"></main>
@@ -158,6 +161,18 @@ async function live(path, key){
 }
 const HOME = { id: 3986, slug: "al-zahya", name: "Al Zahya", city: "Ajman" };
 const ORDER = [["egyptian","أكل مصري"],["burger","برجر"],["pizza","بيتزا"],["mandi","مندي"],["seafood","سي فود"]];
+// what to search for on noon (its app opens food.noon.com / noon.com links directly)
+const NOON_FOOD = { egyptian: "egyptian", burger: "burger", pizza: "pizza", mandi: "mandi", seafood: "seafood" };
+const NOON_WORDS = { "لبن":"milk", "بيض":"eggs", "دقيق":"flour", "ملح":"salt", "عيش":"arabic bread", "رز":"rice", "سكر":"sugar",
+  "زيت":"oil", "مكرونة":"pasta", "جبنة":"cheese", "زبدة":"butter", "زبادي":"yoghurt", "فراخ":"chicken", "لحمة":"beef",
+  "سمك":"fish", "طماطم":"tomato", "بطاطس":"potato", "بصل":"onion", "خيار":"cucumber", "موز":"banana", "تفاح":"apple",
+  "شاي":"tea", "قهوة":"coffee", "مية":"water", "عدس":"lentils", "فول":"fava beans", "تونة":"tuna", "صابون مواعين":"dishwashing liquid", "مناديل":"tissues" };
+function noonFoodLink(){
+  const a = document.getElementById("noonFood"); if (!a) return;
+  const q = $("#q") && $("#q").value.trim() || NOON_FOOD[state.cat];
+  a.href = `https://food.noon.com/uae-en/search/?q=${encodeURIComponent(q)}`;
+  a.dataset.noon = q;
+}
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money = n => Number(n).toFixed(2).replace(/\.00$/,"");
@@ -283,6 +298,7 @@ function foodCard(r){
     </div>${boost}</a>`;
 }
 function renderFood(){
+  noonFoodLink();
   const rows = foodRows().slice(0, 40);
   $("#list").innerHTML = rows.length ? rows.map(foodCard).join("")
     : `<div class="empty">مفيش نتايج. جرّب تشيل "مفتوح دلوقتي" أو "عروض بس".</div>`;
@@ -333,7 +349,8 @@ function renderGrocery(d){
     for (const [p, tag] of [...r.cheapest.slice(0,3).map(p => [p,"أرخص سعر"]), ...r.bestValue.slice(0,2).map(p => [p,"أوفر"])]){
       const k = p.store + p.title; if (seen.has(k)) continue; seen.add(k); rows.push(prod(p, d, tag));
     }
-    html += `<div class="item"><h3>${esc(r.label)}</h3>
+    const en = NOON_WORDS[r.label] || r.word;
+    html += `<div class="item"><a class="noonbtn" href="https://www.noon.com/uae-en/search/?q=${encodeURIComponent(en)}" data-noon="${esc(en)}" target="_blank" rel="noopener">في نون ↗</a><h3>${esc(r.label)}</h3>
       ${bestPick ? `<div class="s" style="color:var(--muted);font-size:12px;margin-bottom:4px">في السلة: ${esc(bestPick.title)} · ${money(bestPick.price)}</div>` : ""}
       ${rows.join("") || `<div class="empty">مالقيتش حاجة.</div>`}</div>`;
   }
@@ -351,6 +368,13 @@ locate();
 <script>
 // Talabat won't let a web link open its app on a restaurant (even its own share links open the
 // website). So a tap copies the name, opens the app with talabat://, and you paste it in search.
+document.addEventListener("click", e => {
+  const n = e.target.closest("a[data-noon]"); if (!n) return;
+  try { navigator.clipboard.writeText(n.dataset.noon); } catch (err) {}
+  const t = document.getElementById("toast");
+  t.innerHTML = `بيفتح نون على <b>${n.dataset.noon.replace(/[<>&]/g, "")}</b>. لو فتح على الصفحة الرئيسية، الكلمة متنسخة: الصقها في البحث.`;
+  t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 6000);
+});
 document.addEventListener("click", async e => {
   const a = e.target.closest("a[data-copy]"); if (!a) return;
   e.preventDefault();
