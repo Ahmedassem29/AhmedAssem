@@ -12,7 +12,7 @@ BASE = "https://www.talabat.com"
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/129.0 Safari/537.36")
 PAUSE = 1.2          # seconds between requests
-MAX_MENUS = 90       # restaurant menus to open per run
+MAX_MENUS = 170      # restaurant menus to open per run
 OUT = os.path.join(os.path.dirname(__file__), "..", "food", "data.json")
 
 # Rules learned from real carts (talabat pro):
@@ -29,10 +29,9 @@ CATEGORIES = {
         "extra_cuisines": ["grills", "arabic"],  # kofta / bechamel often live here
         "keywords": ["bechamel", "béchamel", "bashamel", "macaroni", "makarona",
                      "kofta", "kufta", "koshary", "koshari", "kushari", "molokhia",
-                     "mulukhiyah", "hawawshi", "feteer", "fiteer", "mahshi",
-                     "foul", "ful ", "taameya", "ta'meya",
+                     "mulukhiyah", "hawawshi", "feteer", "fiteer", "mahshi", "fattah",
                      "مكرونة", "مكرونه", "بشاميل", "كفتة", "كفته", "كشري", "ملوخية",
-                     "حواوشي", "فطير", "محشي", "فول", "طعمية"],
+                     "حواوشي", "فطير", "محشي", "فتة"],
     },
     "burger": {
         "label": "برجر",
@@ -64,6 +63,11 @@ SKIP_SECTIONS = re.compile(
     r"drink|beverage|juice|dip|sauce|extra|add[- ]?on|dessert|sweet|soft|water|"
     r"مشروب|عصير|صوص|اضاف|إضاف|حلو", re.I)
 MIN_ITEM_PRICE = 8.0
+# snacks and sides that share a keyword with a real meal
+NOT_A_MEAL = re.compile(r"cracker|chips|slice|salad|sauce|dip\b|soup|spring roll|"
+                        r"rice only|without rice|seasoning|pie\b", re.I)
+COMBO = re.compile(r"deal|meal|combo|box|offer|bundle|duo|trio|feast|وجبة|عرض|كومبو", re.I)
+EXTRA_CUISINE_LIMIT = 12   # how many grills/arabic places to open for kofta etc.
 
 
 def get(url):
@@ -119,18 +123,24 @@ def clean(s):
 def main():
     vendors = {}   # branchId -> vendor
     tags = {}      # branchId -> set(category)
+    prio = {}      # branchId -> 0 for main cuisine, 1 for extra
     for key, cat in CATEGORIES.items():
         for cu in cat["cuisines"] + cat.get("extra_cuisines", []):
-            for v in listing(cu):
+            extra = cu not in cat["cuisines"]
+            found = listing(cu)
+            if extra:
+                found = found[:EXTRA_CUISINE_LIMIT]
+            for v in found:
                 if v.get("statusCode") not in (0, None, "0"):
                     continue  # closed or busy right now
                 bid = v["branchId"]
                 vendors[bid] = v
                 tags.setdefault(bid, set()).add(key)
+                prio[bid] = min(prio.get(bid, 1), 1 if extra else 0)
     print("vendors", len(vendors))
 
     # Open the menus, primary-cuisine restaurants first.
-    order = sorted(vendors, key=lambda b: -len(tags[b]))[:MAX_MENUS]
+    order = sorted(vendors, key=lambda b: (prio[b], -len(tags[b])))[:MAX_MENUS]
     results = {k: [] for k in CATEGORIES}
     searchable = []
     for bid in order:
@@ -178,10 +188,13 @@ def main():
         cheap_addons = sorted(uniq, key=lambda g: g["price"])[:3]
 
         for g in uniq:
-            text = (g["name"] + " " + g["desc"]).lower()
+            text = g["name"].lower()
+            if NOT_A_MEAL.search(text):
+                text = ""
             row = None
+            desc = g["desc"].lower() if COMBO.search(g["name"]) else ""
             for key, cat in CATEGORIES.items():
-                if not any(k in text for k in cat["keywords"]):
+                if not any(k in text or (text and k in desc) for k in cat["keywords"]):
                     continue
                 if row is None:
                     est = estimate(g["price"], listed_fee)
