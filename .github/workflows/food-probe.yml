@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 food-tool/scrape.py > food-tool/out/scrape-log.txt 2>&1 || true
+      - run: mkdir -p food food-tool/out && (python3 food-tool/scrape.py > food-tool/out/scrape-log.txt 2>&1 || true)
       - run: |
           git config user.name "food-bot"; git config user.email "food-bot@users.noreply.github.com"
           git add -A food food-tool/out && git commit -m "scrape test output" && git push
