@@ -1,0 +1,25 @@
+name: food-deals
+# Refreshes /food/data.json with the latest Talabat deals near Al Zahya, Ajman.
+on:
+  schedule:
+    - cron: "17 5,9,12,15,18 * * *"   # ~9am, 1pm, 4pm, 7pm, 10pm UAE time
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: food-deals
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect deals
+        run: python3 food-tool/scrape.py
+      - name: Save if changed
+        run: |
+          git config user.name "food-bot"
+          git config user.email "food-bot@users.noreply.github.com"
+          git add food/data.json
+          git diff --cached --quiet || (git commit -m "Update food deals" && git pull --rebase -q && git push)

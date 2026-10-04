@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="أرخص أكلة">
+<meta name="theme-color" content="#fff8f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16110d" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>أرخص أكلة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* One scrolling list: pick a food type, see real deals ranked by what you'd actually pay. */
+:root{
+  --bg:#fff8f1; --card:#ffffff; --line:#f0e3d6; --fg:#22180f; --muted:#86766a;
+  --accent:#e8590c; --accent-soft:#ffe8d6; --good:#1f9d55; --good-soft:#e2f6ea;
+  --f-ar:"IBM Plex Sans Arabic","Geeza Pro",Tahoma,system-ui,sans-serif;
+  --f-num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16110d; --card:#211a14; --line:#33291f; --fg:#f6ede4; --muted:#a8968a;
+  --accent:#ff7a2e; --accent-soft:#3a2416; --good:#3ccf7d; --good-soft:#163323; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#16110d; --card:#211a14; --line:#33291f; --fg:#f6ede4; --muted:#a8968a;
+  --accent:#ff7a2e; --accent-soft:#3a2416; --good:#3ccf7d; --good-soft:#163323; color-scheme:dark;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:400 15px/1.5 var(--f-ar);
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 28px);
+  max-width:640px;margin:0 auto}
+header h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.2px}
+header p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;margin:0 -16px;padding-inline:16px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--fg);
+  border-radius:999px;padding:8px 16px;font:500 15px var(--f-ar);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.search{margin-top:10px;width:100%;border:1px solid var(--line);background:var(--card);color:var(--fg);
+  border-radius:12px;padding:10px 14px;font:400 15px var(--f-ar);outline:none}
+.search:focus{border-color:var(--accent)}
+.toggles{display:flex;gap:16px;margin-top:10px;font-size:14px;color:var(--muted)}
+.toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.toggles input{accent-color:var(--accent);width:17px;height:17px}
+.list{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;
+  grid-template-columns:72px 1fr;gap:12px;text-decoration:none;color:inherit}
+.card.closed{opacity:.55}
+.thumb{width:72px;height:72px;border-radius:12px;object-fit:cover;background:var(--accent-soft)}
+.name{font-weight:700;font-size:16px;line-height:1.35;margin:0}
+.rest{color:var(--muted);font-size:13px;margin:2px 0 6px}
+.row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.total{font:700 26px/1 var(--f-num);color:var(--accent)}
+.total small{font:500 13px var(--f-ar);color:var(--muted);margin-inline-start:4px}
+.price{font-size:13px;color:var(--muted)}
+.price s{opacity:.8}
+.off{background:var(--good-soft);color:var(--good);font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px}
+.badge{background:var(--line);color:var(--muted);font-size:12px;border-radius:6px;padding:1px 7px}
+.fees{color:var(--muted);font-size:12px;margin-top:4px}
+.boost{grid-column:1/-1;background:var(--accent-soft);border-radius:10px;padding:8px 10px;font-size:13px}
+.boost b{font-family:var(--f-num);font-size:16px}
+.empty,.note{color:var(--muted);text-align:center;padding:24px 8px;font-size:14px}
+.note{text-align:start;padding:18px 2px 0;font-size:12px;line-height:1.7}
+</style>
+</head>
+<body>
+<header>
+  <h1>أرخص أكلة</h1>
+  <p id="meta">بيحمّل…</p>
+</header>
+
+<div class="sticky">
+  <div class="chips" id="chips" role="group" aria-label="نوع الأكل"></div>
+  <input class="search" id="q" type="search" placeholder="دوّر على أكلة… (كفتة، جمبري، مارجريتا)" autocomplete="off">
+  <div class="toggles">
+    <label><input type="checkbox" id="onlyOffers"> عروض بس</label>
+    <label><input type="checkbox" id="onlyOpen" checked> مفتوح دلوقتي</label>
+  </div>
+</div>
+
+<main class="list" id="list"></main>
+
+<p class="note">
+الإجمالي تقديري بقواعد talabat pro: التوصيل مجاني من 30 درهم، تحت 30 بيتحسب حوالي 6.90، وتحت 20 فيه رسوم طلب صغير 2 درهم، وفوقهم رسوم خدمة حوالي 10٪ (أقصى 3.25). الرقم النهائي بيظهر في السلة. الأسعار بتتحدّث لوحدها كل كام ساعة من طلبات، والطلب بيتعمل من تطبيق طلبات.
+</p>
+
+<script>
+const ORDER = ["egyptian","burger","pizza","mandi","seafood"];
+const $ = s => document.querySelector(s);
+const state = { data:null, cat: localGet("cat") || "pizza" };
+
+function localGet(k){ try{return localStorage.getItem(k)}catch(e){return null} }
+function localSet(k,v){ try{localStorage.setItem(k,v)}catch(e){} }
+const money = n => Number(n).toFixed(2).replace(/\.00$/,"");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function ago(iso){
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 60) return `من ${m} دقيقة`;
+  const h = Math.round(m/60);
+  return h === 1 ? "من ساعة" : h === 2 ? "من ساعتين" : `من ${h} ساعات`;
+}
+
+function chips(){
+  const c = $("#chips"); c.innerHTML = "";
+  for (const k of ORDER){
+    const cat = state.data.categories[k]; if (!cat) continue;
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = cat.label;
+    b.setAttribute("aria-pressed", String(k === state.cat && !$("#q").value.trim()));
+    b.onclick = () => { state.cat = k; localSet("cat", k); $("#q").value = ""; chips(); render(); };
+    c.appendChild(b);
+  }
+}
+
+function rows(){
+  const q = $("#q").value.trim().toLowerCase();
+  let all;
+  if (q){
+    const seen = new Set(); all = [];
+    for (const k of ORDER) for (const r of state.data.categories[k]?.items || []) all.push(r);
+    for (const r of state.data.other || []) all.push(r);
+    all = all.filter(r => {
+      const key = r.r.name + "|" + r.name;
+      if (seen.has(key)) return false; seen.add(key);
+      return (r.name + " " + r.desc + " " + r.r.name).toLowerCase().includes(q);
+    });
+  } else {
+    all = [...(state.data.categories[state.cat]?.items || [])];
+  }
+  if ($("#onlyOffers").checked) all = all.filter(r => r.old);
+  if ($("#onlyOpen").checked) all = all.filter(r => r.r.open !== false);
+  return all.sort((a,b) => a.est.total - b.est.total);
+}
+
+function card(r){
+  const off = r.old ? Math.round((1 - r.price / r.old) * 100) : 0;
+  const fees = [];
+  fees.push(r.est.delivery ? `توصيل ${money(r.est.delivery)}` : "توصيل مجاني");
+  if (r.est.small) fees.push(`طلب صغير ${money(r.est.small)}`);
+  if (r.est.service) fees.push(`خدمة ${money(r.est.service)}`);
+  const boost = r.boost && r.boost.total - r.est.total <= 15
+    ? `<div class="boost">زوّد <strong>${esc(r.boost.name)}</strong> (${money(r.boost.price)}) والتوصيل يبقى مجاني: الإجمالي <b>${money(r.boost.total)}</b> بس.</div>` : "";
+  return `<a class="card${r.r.open === false ? " closed" : ""}" href="${esc(r.r.url)}" target="_blank" rel="noopener">
+    <img class="thumb" src="${esc(r.img || r.r.logo || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+    <div>
+      <p class="name">${esc(r.name)}</p>
+      <p class="rest">${esc(r.r.name)}${r.r.open === false ? " · مقفول دلوقتي" : ""}</p>
+      <div class="row">
+        <span class="total">${money(r.est.total)}<small>درهم الإجمالي</small></span>
+        <span class="price">${money(r.price)} ${r.old ? `<s>${money(r.old)}</s>` : ""}</span>
+        ${off >= 5 ? `<span class="off">-${off}٪</span>` : ""}
+      </div>
+      <div class="fees">${fees.join(" · ")}</div>
+    </div>
+    ${boost}
+  </a>`;
+}
+
+function render(){
+  const list = rows().slice(0, 40);
+  $("#list").innerHTML = list.length ? list.map(card).join("")
+    : `<div class="empty">مفيش نتايج دلوقتي. جرّب تشيل "مفتوح دلوقتي" أو "عروض بس".</div>`;
+}
+
+$("#q").addEventListener("input", () => { chips(); render(); });
+$("#onlyOffers").addEventListener("change", render);
+$("#onlyOpen").addEventListener("change", render);
+
+fetch("data.json?v=" + Date.now()).then(r => r.json()).then(d => {
+  state.data = d;
+  if (!d.categories[state.cat]) state.cat = ORDER[0];
+  $("#meta").textContent = `الزاهية، عجمان · طلبات · اتحدّث ${ago(d.updated)}`;
+  chips(); render();
+}).catch(() => { $("#meta").textContent = "مقدرتش أحمّل الأسعار. جرّب تاني بعد شوية."; });
+</script>
+</body>
+</html>
