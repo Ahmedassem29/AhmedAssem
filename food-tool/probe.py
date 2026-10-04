@@ -1,4 +1,6 @@
-import re, json, urllib.request
+import re, json, urllib.request, os, sys
+os.makedirs("food-tool/out", exist_ok=True)
+sys.stdout = open("food-tool/out/log.txt","w")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36"
 def get(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9", "Accept": "text/html,application/json"})
@@ -34,7 +36,8 @@ for name, url in [
     if d:
         ks = keys(d)
         print("\n".join(ks[:250]))
-        open(f"/tmp/{name}.json","w").write(json.dumps(d)[:2000000])
+        open(f"food-tool/out/{name}.json","w").write(json.dumps(d))
     else:
         print(h[:1500])
+        open(f"food-tool/out/{name}.html","w").write(h[:400000])
         print("API-like urls:", sorted(set(re.findall(r'https?://[a-z0-9.-]*(?:api|noon)[a-z0-9./_-]*', h)))[:40])
