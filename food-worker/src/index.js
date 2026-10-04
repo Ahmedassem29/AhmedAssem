@@ -10,7 +10,7 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const ALLOWED_ORIGINS = ["https://aahmedassem.com", "https://www.aahmedassem.com"];
 const FOOD_TTL = 3 * 3600;      // seconds
 const GROCERY_TTL = 6 * 3600;
-const MAX_MENUS = 30;            // free plan allows 50 outbound requests per call
+const MAX_MENUS = 24;            // free plan allows 50 outbound requests per call
 const MAX_STORES = 5;
 const REQUEST_BUDGET = 47;       // keep under the 50 outbound requests limit
 
@@ -39,14 +39,14 @@ const MIN_ITEM_PRICE = 8;
 
 // Shopping-list words -> Talabat aisles (+ words the product title must / must not contain)
 const GROCERY = [
-  { k: ["لبن", "حليب", "milk"], label: "لبن", aisles: ["fresh-milk", "long-life-milk"], must: ["milk"], not: ["chocolate", "strawberry", "banana", "flavour", "flavored", "coffee", "condensed"] },
-  { k: ["بيض", "egg", "eggs"], label: "بيض", aisles: ["eggs"], must: ["egg"] },
-  { k: ["دقيق", "طحين", "flour"], label: "دقيق", aisles: ["baking-ingredients"], must: ["flour"] },
-  { k: ["ملح", "salt"], label: "ملح", aisles: ["salt"], must: ["salt"], not: ["pepper"] },
+  { k: ["لبن", "حليب", "milk"], label: "لبن", aisles: ["fresh-milk", "long-life-milk"], must: ["milk"], not: ["chocolate", "strawberry", "banana", "flavour", "flavored", "coffee", "condensed"], typical: [900, 2500, "ml"] },
+  { k: ["بيض", "egg", "eggs"], label: "بيض", aisles: ["eggs"], must: ["egg"], typical: [12, 30, "pc"] },
+  { k: ["دقيق", "طحين", "flour"], label: "دقيق", aisles: ["baking-ingredients"], must: ["flour"], not: ["besan", "corn", "rice", "gram", "chickpea", "self raising", "tapioca", "almond", "coconut"], typical: [900, 2500, "g"] },
+  { k: ["ملح", "salt"], label: "ملح", aisles: ["salt"], must: ["salt"], not: ["pepper", "himalayan", "rock"], typical: [500, 1100, "g"] },
   { k: ["خبز", "عيش", "bread", "توست"], label: "عيش", aisles: ["flatbread", "toast"] },
-  { k: ["رز", "أرز", "ارز", "rice"], label: "رز", aisles: ["rice"], must: ["rice"] },
-  { k: ["سكر", "sugar"], label: "سكر", aisles: ["sugar-sweeteners"], must: ["sugar"], not: ["free", "stevia"] },
-  { k: ["زيت", "oil"], label: "زيت", aisles: ["frying-oil", "olive-oil"], must: ["oil"] },
+  { k: ["رز", "أرز", "ارز", "rice"], label: "رز", aisles: ["rice"], must: ["rice"], not: ["powder", "flour", "cake", "noodle", "vermicelli"], typical: [900, 5100, "g"] },
+  { k: ["سكر", "sugar"], label: "سكر", aisles: ["sugar-sweeteners"], must: ["sugar"], not: ["free", "stevia", "brown", "icing"], typical: [900, 2100, "g"] },
+  { k: ["زيت", "oil"], label: "زيت", aisles: ["frying-oil", "olive-oil"], must: ["oil"], typical: [750, 1900, "ml"] },
   { k: ["مكرونة", "مكرونه", "باستا", "pasta"], label: "مكرونة", aisles: ["pastas"] },
   { k: ["جبنة", "جبنه", "جبن", "cheese"], label: "جبنة", aisles: ["cheese", "cheese-labneh"] },
   { k: ["زبدة", "زبده", "butter"], label: "زبدة", aisles: ["butter", "cream-butter"], must: ["butter"], not: ["peanut"] },
@@ -62,7 +62,7 @@ const GROCERY = [
   { k: ["تفاح", "apple"], label: "تفاح", aisles: ["fresh-fruit"], must: ["apple"] },
   { k: ["شاي", "tea"], label: "شاي", aisles: ["tea"] },
   { k: ["قهوة", "بن", "coffee"], label: "قهوة", aisles: ["coffee"] },
-  { k: ["مية", "مياه", "ماء", "water"], label: "مية", aisles: ["water"], must: ["water"] },
+  { k: ["مية", "مياه", "ماء", "water"], label: "مية", aisles: ["water"], must: ["water"], not: ["sparkling", "coconut", "flavour"] },
   { k: ["عدس", "lentil"], label: "عدس", aisles: ["pulses-grains"], must: ["lentil"] },
   { k: ["فول", "fava", "foul"], label: "فول", aisles: ["pulses-grains", "canned-vegetables"], must: ["fava", "foul", "ful "] },
   { k: ["تونة", "تونه", "tuna"], label: "تونة", aisles: ["canned-seafood"], must: ["tuna"] },
@@ -124,7 +124,7 @@ async function food(area, slug, catKey, ctx) {
   for (const cu of cat.extra || []) for (const v of (await listing(area, slug, cu, ctx, 1)).slice(0, 8)) if (!byId.has(v.branchId)) byId.set(v.branchId, { v, prio: 1 });
   const chosen = [...byId.values()].sort((a, b) => a.prio - b.prio).slice(0, MAX_MENUS).map(x => x.v);
 
-  const rows = (await inBatches(chosen, 8, async v => {
+  const rows = (await inBatches(chosen, 12, async v => {
     let ms;
     try { ms = (await page(`${BASE}${v.menuUrl}?aid=${area}`, ctx, FOOD_TTL)).initialMenuState; } catch { return []; }
     const fee = num(v.deliveryFee);
@@ -244,7 +244,14 @@ async function grocery(area, slug, list, ctx) {
     });
     const cheapest = [...matches].sort((a, b) => a.price - b.price).slice(0, 5);
     const bestValue = matches.filter(m => m.unit).sort((a, b) => a.unit.v - b.unit.v).slice(0, 5);
-    const perStoreCheapest = perStore.map((_, si) => matches.filter(m => m.store === si).sort((a, b) => a.price - b.price)[0] || null);
+    // basket pick per store: cheapest normal-size pack (e.g. 1-2L milk, not a 180ml carton)
+    const normal = m => !r.typical || (m.size && m.size[1] === r.typical[2] && m.size[0] >= r.typical[0] && m.size[0] <= r.typical[1]);
+    const perStoreCheapest = perStore.map((_, si) => {
+      const mine = matches.filter(m => m.store === si);
+      return mine.filter(normal).sort((a, b) => a.price - b.price)[0]
+        || mine.filter(m => m.unit).sort((a, b) => a.unit.v - b.unit.v)[0]
+        || mine.sort((a, b) => a.price - b.price)[0] || null;
+    });
     return { word: w.word, label: r.label, cheapest, bestValue, perStoreCheapest };
   });
 

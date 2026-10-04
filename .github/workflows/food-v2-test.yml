@@ -21,7 +21,7 @@ jobs:
           (npx wrangler dev --port 8787 --ip 127.0.0.1 > ../food-tool/out/wrangler.txt 2>&1 &)
           for i in $(seq 1 40); do curl -s localhost:8787/ >/dev/null && break; sleep 2; done
           cd ..
-          for c in pizza egyptian; do
+          for c in seafood; do
             /usr/bin/time -f "%es" curl -s -m 120 "localhost:8787/food?area=3986&slug=al-zahya&cat=$c" -o food-tool/out/food-$c.json 2>> food-tool/out/times.txt
           done
           /usr/bin/time -f "%es" curl -s -m 120 -G "localhost:8787/grocery?area=3986&slug=al-zahya" --data-urlencode "items=لبن، بيض، دقيق، ملح، خبز، رز" -o food-tool/out/grocery.json 2>> food-tool/out/times.txt
