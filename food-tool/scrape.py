@@ -29,9 +29,9 @@ CATEGORIES = {
         "extra_cuisines": ["grills", "arabic"],  # kofta / bechamel often live here
         "keywords": ["bechamel", "béchamel", "bashamel", "macaroni", "makarona",
                      "kofta", "kufta", "koshary", "koshari", "kushari", "molokhia",
-                     "mulukhiyah", "hawawshi", "feteer", "fiteer", "mahshi", "fattah",
+                     "mulukhiyah", "hawawshi", "feteer", "fiteer", "mahshi",
                      "مكرونة", "مكرونه", "بشاميل", "كفتة", "كفته", "كشري", "ملوخية",
-                     "حواوشي", "فطير", "محشي", "فتة"],
+                     "حواوشي", "فطير", "محشي"],
     },
     "burger": {
         "label": "برجر",
@@ -131,13 +131,14 @@ def main():
             if extra:
                 found = found[:EXTRA_CUISINE_LIMIT]
             for v in found:
-                if v.get("statusCode") not in (0, None, "0"):
-                    continue  # closed or busy right now
                 bid = v["branchId"]
                 vendors[bid] = v
                 tags.setdefault(bid, set()).add(key)
                 prio[bid] = min(prio.get(bid, 1), 1 if extra else 0)
     print("vendors", len(vendors))
+    from collections import Counter
+    print("status", Counter(str(v.get("statusCode")) for v in vendors.values()))
+    print("pizzaro?", [v["name"] for v in vendors.values() if "izzaro" in v["name"]])
 
     # Open the menus, primary-cuisine restaurants first.
     order = sorted(vendors, key=lambda b: (prio[b], -len(tags[b])))[:MAX_MENUS]
@@ -160,6 +161,7 @@ def main():
             "time": v.get("avgDeliveryTime"),
             "min": num(v.get("minimumOrderAmount")),
             "promo": clean(v.get("discountText") or v.get("promotionText")),
+            "open": v.get("statusCode") in (0, None, "0"),
         }
         good = []
         for it in items:
