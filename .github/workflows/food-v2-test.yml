@@ -1,0 +1,31 @@
+name: food-v2-test
+on:
+  push:
+    branches: [food-v2]
+    paths: [food-worker/**, food-tool/**, .github/workflows/food-v2-test.yml]
+permissions:
+  contents: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env: { CI: "true", WRANGLER_SEND_METRICS: "false" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: mkdir -p food-tool/out && python3 food-tool/fetch_areas.py > food-tool/out/areas.txt 2>&1 || true
+      - name: Run the worker locally and call it
+        run: |
+          cd food-worker && npm i --silent >/dev/null 2>&1
+          (npx wrangler dev --port 8787 --ip 127.0.0.1 > ../food-tool/out/wrangler.txt 2>&1 &)
+          for i in $(seq 1 40); do curl -s localhost:8787/ >/dev/null && break; sleep 2; done
+          cd ..
+          for c in pizza egyptian; do
+            /usr/bin/time -f "%es" curl -s -m 120 "localhost:8787/food?area=3986&slug=al-zahya&cat=$c" -o food-tool/out/food-$c.json 2>> food-tool/out/times.txt
+          done
+          /usr/bin/time -f "%es" curl -s -m 120 -G "localhost:8787/grocery?area=3986&slug=al-zahya" --data-urlencode "items=لبن، بيض، دقيق، ملح، خبز، رز" -o food-tool/out/grocery.json 2>> food-tool/out/times.txt
+          /usr/bin/time -f "%es" curl -s -m 120 "localhost:8787/food?area=3986&slug=al-zahya&cat=pizza" -o /dev/null 2>> food-tool/out/times.txt
+      - run: |
+          git config user.name "food-bot"; git config user.email "food-bot@users.noreply.github.com"
+          git add -f food-tool/out food/talabat-areas.json; git commit -m "v2 test output" && git push

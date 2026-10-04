@@ -1,19 +1,20 @@
-"""Collect the best Talabat deals near Al Zahya (Ajman) for a few food types.
+"""Collect the best Talabat restaurant deals for a few food types.
 
-Runs in GitHub Actions on a schedule and writes food/data.json, which the
-page at /food reads. Personal use only: a few dozen page loads per run,
+Runs in GitHub Actions on a schedule. For every area in areas.json it writes
+food/food-<areaId>.json, which the page at /food reads. Personal use only: a few dozen page loads per run,
 with a pause between each.
 """
 import json, re, time, urllib.request, datetime, os, html
 
-AREA_ID = 3986
-AREA_SLUG = "al-zahya"
+HERE = os.path.dirname(os.path.abspath(__file__))
+AREAS = json.load(open(os.path.join(HERE, "areas.json"), encoding="utf-8"))
+AREA_ID, AREA_SLUG = AREAS[0]["id"], AREAS[0]["slug"]   # set per area in main()
 BASE = "https://www.talabat.com"
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/129.0 Safari/537.36")
 PAUSE = 1.2          # seconds between requests
 MAX_MENUS = 170      # restaurant menus to open per run
-OUT = os.path.join(os.path.dirname(__file__), "..", "food", "data.json")
+OUT_DIR = os.path.join(HERE, "..", "food")
 
 # Rules learned from real carts (talabat pro):
 PRO_FREE_DELIVERY_MIN = 30.0   # pro gets free delivery from this subtotal
@@ -120,7 +121,9 @@ def clean(s):
     return html.unescape(s or "").strip()
 
 
-def main():
+def run_area(area):
+    global AREA_ID, AREA_SLUG
+    AREA_ID, AREA_SLUG = area["id"], area["slug"]
     vendors = {}   # branchId -> vendor
     tags = {}      # branchId -> set(category)
     prio = {}      # branchId -> 0 for main cuisine, 1 for extra
@@ -153,6 +156,8 @@ def main():
         rest = {
             "name": clean(v.get("name")),
             "url": f"{BASE}{v['menuUrl']}?aid={AREA_ID}",
+            # short branch link: talabat lets this one open the app (restaurant pages stay on the web)
+            "app": f"{BASE}{v['branchUrl']}" if v.get("branchUrl") else None,
             "rating": v.get("rate"),
             "logo": v.get("logo"),
             "time": v.get("avgDeliveryTime"),
@@ -184,7 +189,6 @@ def main():
             if g["name"] in seen:
                 continue
             seen.add(g["name"]); uniq.append(g)
-        cheap_addons = sorted(uniq, key=lambda g: g["price"])[:3]
 
         for g in uniq:
             text = g["name"].lower()
@@ -211,7 +215,7 @@ def main():
                 searchable.append(dict(g, r=rest, est=estimate(g["price"], listed_fee)))
 
     out = {"updated": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="minutes"),
-           "area": "Al Zahya, Ajman", "categories": {}, "other": []}
+           "area": area["name"], "categories": {}, "other": []}
     for key, rows in results.items():
         rows.sort(key=lambda r: (r["est"]["total"], -(r["old"] or r["price"])))
         # keep at most 4 items per restaurant so one place doesn't fill the list
@@ -227,11 +231,23 @@ def main():
     searchable.sort(key=lambda r: r["est"]["total"])
     out["other"] = searchable[:150]
 
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w", encoding="utf-8") as f:
+    path = os.path.join(OUT_DIR, f"food-{AREA_ID}.json")
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
-    print("wrote", OUT, os.path.getsize(OUT), "bytes")
+    print("wrote", path, os.path.getsize(path), "bytes")
+
+
+def write_index():
+    """food/areas.json: the areas the page can pick from (nearest to the phone wins)."""
+    with open(os.path.join(OUT_DIR, "areas.json"), "w", encoding="utf-8") as f:
+        json.dump(AREAS, f, ensure_ascii=False, separators=(",", ":"))
 
 
 if __name__ == "__main__":
-    main()
+    os.makedirs(OUT_DIR, exist_ok=True)
+    write_index()
+    for a in AREAS:
+        try:
+            run_area(a)
+        except Exception as e:
+            print("area failed", a["slug"], e)
