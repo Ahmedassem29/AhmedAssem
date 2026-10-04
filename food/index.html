@@ -17,39 +17,53 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
-/* One scrolling list: pick a food type, see real deals ranked by what you'd actually pay. */
+/* Two tabs: restaurant deals ranked by what you'd actually pay, and a shopping list matched to the cheapest supermarket. */
 :root{
   --bg:#fff8f1; --card:#ffffff; --line:#f0e3d6; --fg:#22180f; --muted:#86766a;
-  --accent:#e8590c; --accent-soft:#ffe8d6; --good:#1f9d55; --good-soft:#e2f6ea;
+  --accent:#e8590c; --accent-soft:#ffe8d6; --good:#1f9d55; --good-soft:#e2f6ea; --warn:#b26b00;
   --f-ar:"IBM Plex Sans Arabic","Geeza Pro",Tahoma,system-ui,sans-serif;
   --f-num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#16110d; --card:#211a14; --line:#33291f; --fg:#f6ede4; --muted:#a8968a;
-  --accent:#ff7a2e; --accent-soft:#3a2416; --good:#3ccf7d; --good-soft:#163323; color-scheme:dark;}}
+  --accent:#ff7a2e; --accent-soft:#3a2416; --good:#3ccf7d; --good-soft:#163323; --warn:#f0a43a; color-scheme:dark;}}
 :root[data-theme="dark"]{
   --bg:#16110d; --card:#211a14; --line:#33291f; --fg:#f6ede4; --muted:#a8968a;
-  --accent:#ff7a2e; --accent-soft:#3a2416; --good:#3ccf7d; --good-soft:#163323; color-scheme:dark;}
+  --accent:#ff7a2e; --accent-soft:#3a2416; --good:#3ccf7d; --good-soft:#163323; --warn:#f0a43a; color-scheme:dark;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font:400 15px/1.5 var(--f-ar);
   padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 28px);
   max-width:640px;margin:0 auto}
-header h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.2px}
-header p{margin:2px 0 0;color:var(--muted);font-size:13px}
-.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;margin:0 -16px;padding-inline:16px}
+button,input,textarea{font:inherit;color:inherit}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+header h1{margin:0;font-size:26px;font-weight:700}
+.loc{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-top:2px}
+.loc button{border:0;background:none;color:var(--accent);font-weight:500;padding:0;cursor:pointer}
+.tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.tabs button{border:0;background:none;padding:6px 14px;border-radius:9px;font-weight:500;cursor:pointer;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
+.areabox{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px}
+.areabox input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px;outline:none}
+.areabox ul{list-style:none;margin:6px 0 0;padding:0;max-height:240px;overflow:auto}
+.areabox li button{width:100%;text-align:start;border:0;background:none;padding:8px 6px;border-radius:8px;cursor:pointer}
+.areabox li button:hover{background:var(--accent-soft)}
+.areabox small{color:var(--muted)}
+.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 10px;margin:0 -16px}
 .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--fg);
-  border-radius:999px;padding:8px 16px;font:500 15px var(--f-ar);cursor:pointer}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;font-weight:500;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.search{margin-top:10px;width:100%;border:1px solid var(--line);background:var(--card);color:var(--fg);
-  border-radius:12px;padding:10px 14px;font:400 15px var(--f-ar);outline:none}
-.search:focus{border-color:var(--accent)}
+.field{margin-top:10px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 14px;outline:none}
+.field:focus{border-color:var(--accent)}
+textarea.field{min-height:70px;resize:vertical}
 .toggles{display:flex;gap:16px;margin-top:10px;font-size:14px;color:var(--muted)}
 .toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
 .toggles input{accent-color:var(--accent);width:17px;height:17px}
+.go{margin-top:10px;width:100%;border:0;background:var(--accent);color:#fff;border-radius:12px;padding:11px;font-weight:700;font-size:16px;cursor:pointer}
+.go:disabled{opacity:.6}
 .list{display:flex;flex-direction:column;gap:12px;margin-top:6px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;
   grid-template-columns:72px 1fr;gap:12px;text-decoration:none;color:inherit}
@@ -61,95 +75,184 @@ header p{margin:2px 0 0;color:var(--muted);font-size:13px}
 .total{font:700 26px/1 var(--f-num);color:var(--accent)}
 .total small{font:500 13px var(--f-ar);color:var(--muted);margin-inline-start:4px}
 .price{font-size:13px;color:var(--muted)}
-.price s{opacity:.8}
 .off{background:var(--good-soft);color:var(--good);font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px}
-.badge{background:var(--line);color:var(--muted);font-size:12px;border-radius:6px;padding:1px 7px}
 .fees{color:var(--muted);font-size:12px;margin-top:4px}
 .boost{grid-column:1/-1;background:var(--accent-soft);border-radius:10px;padding:8px 10px;font-size:13px}
 .boost b{font-family:var(--f-num);font-size:16px}
-.empty,.note{color:var(--muted);text-align:center;padding:24px 8px;font-size:14px}
-.note{text-align:start;padding:18px 2px 0;font-size:12px;line-height:1.7}
+.status,.empty{color:var(--muted);text-align:center;padding:24px 8px;font-size:14px}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite;vertical-align:-4px;margin-inline-end:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.note{color:var(--muted);font-size:12px;line-height:1.7;padding-top:18px}
+/* groceries */
+.winner{background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:14px;text-decoration:none;color:inherit;display:block}
+.winner .k{color:var(--muted);font-size:13px}
+.winner h2{margin:2px 0 4px;font-size:20px}
+.stores{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.store{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-top:1px solid var(--line)}
+.store b{font-family:var(--f-num);font-size:18px}
+.warn{color:var(--warn);font-size:12px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+.item h3{margin:0 0 6px;font-size:17px}
+.prod{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line);text-decoration:none;color:inherit}
+.prod img{width:44px;height:44px;border-radius:8px;object-fit:contain;background:#fff}
+.prod .t{font-size:13px;line-height:1.35}
+.prod .s{color:var(--muted);font-size:12px}
+.prod .p{font:700 20px var(--f-num);color:var(--accent);text-align:end}
+.prod .u{display:block;font:400 11px var(--f-ar);color:var(--muted)}
+.tag{white-space:nowrap;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;background:var(--good-soft);color:var(--good);margin-inline-start:4px}
 </style>
 </head>
 <body>
 <header>
-  <h1>أرخص أكلة</h1>
-  <p id="meta">بيحمّل…</p>
+  <div>
+    <h1>أرخص أكلة</h1>
+    <div class="loc">📍 <span id="areaName">بحدد مكانك…</span> · <button id="changeArea" type="button">غيّر</button></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabFood" aria-selected="true">أكل</button>
+    <button role="tab" id="tabGrocery" aria-selected="false">سوبرماركت</button>
+  </div>
 </header>
 
-<div class="sticky">
-  <div class="chips" id="chips" role="group" aria-label="نوع الأكل"></div>
-  <input class="search" id="q" type="search" placeholder="دوّر على أكلة… (كفتة، جمبري، مارجريتا)" autocomplete="off">
-  <div class="toggles">
-    <label><input type="checkbox" id="onlyOffers"> عروض بس</label>
-    <label><input type="checkbox" id="onlyOpen" checked> مفتوح دلوقتي</label>
-  </div>
+<div class="areabox" id="areaBox" hidden>
+  <button class="go" id="useGps" type="button" style="margin-top:0">استخدم مكاني الحالي</button>
+  <input id="areaQ" type="search" placeholder="أو اكتب اسم المنطقة (Al Nuaimiya, JLT…)" autocomplete="off" style="margin-top:8px">
+  <ul id="areaList"></ul>
 </div>
 
-<main class="list" id="list"></main>
+<section id="foodView">
+  <div class="sticky">
+    <div class="chips" id="chips" role="group" aria-label="نوع الأكل"></div>
+    <input class="field" id="q" type="search" placeholder="فلتر النتايج… (كفتة، جمبري، مارجريتا)" autocomplete="off">
+    <div class="toggles">
+      <label><input type="checkbox" id="onlyOffers"> عروض بس</label>
+      <label><input type="checkbox" id="onlyOpen" checked> مفتوح دلوقتي</label>
+    </div>
+  </div>
+  <main class="list" id="list"></main>
+  <p class="note">الإجمالي تقديري بقواعد talabat pro: التوصيل مجاني من 30 درهم، تحت 30 بيتحسب حوالي 6.90، وتحت 20 فيه رسوم طلب صغير 2 درهم، وفوقهم رسوم خدمة حوالي 10٪ (أقصى 3.25). الرقم النهائي بيظهر في السلة. لما تدوس على وجبة بيفتح المطعم في تطبيق طلبات.</p>
+</section>
 
-<p class="note">
-الإجمالي تقديري بقواعد talabat pro: التوصيل مجاني من 30 درهم، تحت 30 بيتحسب حوالي 6.90، وتحت 20 فيه رسوم طلب صغير 2 درهم، وفوقهم رسوم خدمة حوالي 10٪ (أقصى 3.25). الرقم النهائي بيظهر في السلة. الأسعار بتتحدّث لوحدها كل كام ساعة من طلبات، والطلب بيتعمل من تطبيق طلبات.
-</p>
+<section id="groceryView" hidden>
+  <textarea class="field" id="shop" placeholder="اكتب اللي محتاجه، مثلاً: لبن، بيض، دقيق، ملح، عيش، رز"></textarea>
+  <button class="go" id="shopGo" type="button">دوّر على أرخص سوبرماركت</button>
+  <div id="shopOut" class="list" style="margin-top:14px"></div>
+  <p class="note">بيقارن السوبرماركتات اللي بتوصّل لمنطقتك على طلبات. "أرخص سعر" هو أرخص عبوة، و"أوفر" هو الأرخص للكيلو أو اللتر أو الحبة. سلة كل محل بتختار عبوة بحجم عادي (لتر لبن، كيلو دقيق…). رسوم التوصيل في البقالة بتختلف حسب المحل.</p>
+</section>
 
 <script>
-const ORDER = ["egyptian","burger","pizza","mandi","seafood"];
+// Live server on Cloudflare (set after it's deployed). Empty = use the saved data for Al Zahya.
+const WORKER = new URLSearchParams(location.search).get("api") || "";
+const HOME = { id: 3986, slug: "al-zahya", name: "Al Zahya", city: "Ajman" };
+const ORDER = [["egyptian","أكل مصري"],["burger","برجر"],["pizza","بيتزا"],["mandi","مندي"],["seafood","سي فود"]];
 const $ = s => document.querySelector(s);
-const state = { data:null, cat: localGet("cat") || "pizza" };
-
-function localGet(k){ try{return localStorage.getItem(k)}catch(e){return null} }
-function localSet(k,v){ try{localStorage.setItem(k,v)}catch(e){} }
-const money = n => Number(n).toFixed(2).replace(/\.00$/,"");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => Number(n).toFixed(2).replace(/\.00$/,"");
+function lsGet(k){ try{return JSON.parse(localStorage.getItem(k))}catch(e){return null} }
+function lsSet(k,v){ try{localStorage.setItem(k, JSON.stringify(v))}catch(e){} }
 
-function ago(iso){
-  const m = Math.round((Date.now() - new Date(iso)) / 60000);
-  if (m < 60) return `من ${m} دقيقة`;
-  const h = Math.round(m/60);
-  return h === 1 ? "من ساعة" : h === 2 ? "من ساعتين" : `من ${h} ساعات`;
+const state = { area: lsGet("area"), cat: lsGet("cat") || "pizza", food: {}, areas: null };
+
+// ---------- area ----------
+async function loadAreas(){
+  if (!state.areas) state.areas = await fetch("talabat-areas.json").then(r => r.json());
+  return state.areas;
+}
+function setArea(a){
+  state.area = a; lsSet("area", a); state.food = {};
+  $("#areaName").textContent = `${a.name}، ${a.city}`;
+  $("#areaBox").hidden = true;
+  loadFood();
+}
+function nearest(areas, lat, lng){
+  let best = null, bd = Infinity;
+  for (const [id, slug, name, city, la, ln] of areas){
+    const d = (la-lat)**2 + ((ln-lng)*Math.cos(lat*Math.PI/180))**2;
+    if (d < bd){ bd = d; best = { id, slug, name, city }; }
+  }
+  return best;
+}
+function locate(){
+  $("#areaName").textContent = "بحدد مكانك…";
+  if (!navigator.geolocation){ setArea(state.area || HOME); return; }
+  navigator.geolocation.getCurrentPosition(async p => {
+    const areas = await loadAreas();
+    setArea(nearest(areas, p.coords.latitude, p.coords.longitude) || HOME);
+  }, () => { setArea(state.area || HOME); }, { enableHighAccuracy:false, timeout:10000, maximumAge:600000 });
+}
+$("#changeArea").onclick = async () => { $("#areaBox").hidden = !$("#areaBox").hidden; if (!$("#areaBox").hidden){ await loadAreas(); $("#areaQ").focus(); renderAreaList(); } };
+$("#useGps").onclick = locate;
+$("#areaQ").oninput = renderAreaList;
+function renderAreaList(){
+  const q = $("#areaQ").value.trim().toLowerCase();
+  const hits = (state.areas || []).filter(a => !q || (a[2]+" "+a[3]).toLowerCase().includes(q)).slice(0, 30);
+  $("#areaList").innerHTML = hits.map((a,i) => `<li><button type="button" data-i="${state.areas.indexOf(a)}">${esc(a[2])} <small>${esc(a[3])}</small></button></li>`).join("");
+  $("#areaList").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const [id, slug, name, city] = state.areas[+b.dataset.i]; setArea({ id, slug, name, city });
+  });
 }
 
+// ---------- tabs ----------
+function tab(which){
+  $("#tabFood").setAttribute("aria-selected", which === "food");
+  $("#tabGrocery").setAttribute("aria-selected", which === "grocery");
+  $("#foodView").hidden = which !== "food"; $("#groceryView").hidden = which !== "grocery";
+  lsSet("tab", which);
+}
+$("#tabFood").onclick = () => tab("food");
+$("#tabGrocery").onclick = () => tab("grocery");
+
+// ---------- food ----------
 function chips(){
-  const c = $("#chips"); c.innerHTML = "";
-  for (const k of ORDER){
-    const cat = state.data.categories[k]; if (!cat) continue;
+  $("#chips").innerHTML = "";
+  for (const [k, label] of ORDER){
     const b = document.createElement("button");
-    b.className = "chip"; b.textContent = cat.label;
-    b.setAttribute("aria-pressed", String(k === state.cat && !$("#q").value.trim()));
-    b.onclick = () => { state.cat = k; localSet("cat", k); $("#q").value = ""; chips(); render(); };
-    c.appendChild(b);
+    b.className = "chip"; b.textContent = label; b.setAttribute("aria-pressed", String(k === state.cat));
+    b.onclick = () => { state.cat = k; lsSet("cat", k); chips(); loadFood(); };
+    $("#chips").appendChild(b);
   }
 }
-
-function rows(){
-  const q = $("#q").value.trim().toLowerCase();
-  let all;
-  if (q){
-    const seen = new Set(); all = [];
-    for (const k of ORDER) for (const r of state.data.categories[k]?.items || []) all.push(r);
-    for (const r of state.data.other || []) all.push(r);
-    all = all.filter(r => {
-      const key = r.r.name + "|" + r.name;
-      if (seen.has(key)) return false; seen.add(key);
-      return (r.name + " " + r.desc + " " + r.r.name).toLowerCase().includes(q);
-    });
-  } else {
-    all = [...(state.data.categories[state.cat]?.items || [])];
+let foodReq = 0;
+async function loadFood(){
+  const a = state.area || HOME, cat = state.cat, key = `${a.id}:${cat}`, my = ++foodReq;
+  if (state.food[key]) return renderFood();
+  $("#list").innerHTML = `<div class="status"><span class="spin"></span>بيجيب أسعار ${esc(ORDER.find(o=>o[0]===cat)[1])} من طلبات… أول مرة ممكن تاخد 20 ثانية</div>`;
+  try {
+    let data;
+    if (WORKER){
+      data = await fetch(`${WORKER}/food?area=${a.id}&slug=${a.slug}&cat=${cat}`).then(r => r.json());
+      if (data.error) throw new Error(data.error);
+    } else if (a.id === HOME.id){
+      const saved = await fetch(`food-${HOME.id}.json?v=${Date.now()}`).then(r => r.json());
+      data = { ...saved.categories[cat], updated: saved.updated };
+    } else {
+      throw new Error("السيرفر اللايف لسه مش متركّب، فمتاح الزاهية بس دلوقتي.");
+    }
+    state.food[key] = data;
+  } catch (e) {
+    if (my === foodReq) $("#list").innerHTML = `<div class="empty">مقدرتش أجيب الأسعار: ${esc(e.message)}</div>`;
+    return;
   }
+  if (my === foodReq) renderFood();
+}
+function foodRows(){
+  const a = state.area || HOME;
+  let all = [...(state.food[`${a.id}:${state.cat}`]?.items || [])];
+  const q = $("#q").value.trim().toLowerCase();
+  if (q) all = all.filter(r => (r.name+" "+r.desc+" "+r.r.name).toLowerCase().includes(q));
   if ($("#onlyOffers").checked) all = all.filter(r => r.old);
   if ($("#onlyOpen").checked) all = all.filter(r => r.r.open !== false);
-  return all.sort((a,b) => a.est.total - b.est.total);
+  return all.sort((x,y) => x.est.total - y.est.total);
 }
-
-function card(r){
+function foodCard(r){
   const off = r.old ? Math.round((1 - r.price / r.old) * 100) : 0;
-  const fees = [];
-  fees.push(r.est.delivery ? `توصيل ${money(r.est.delivery)}` : "توصيل مجاني");
+  const fees = [r.est.delivery ? `توصيل ${money(r.est.delivery)}` : "توصيل مجاني"];
   if (r.est.small) fees.push(`طلب صغير ${money(r.est.small)}`);
   if (r.est.service) fees.push(`خدمة ${money(r.est.service)}`);
   const boost = r.boost && r.boost.total - r.est.total <= 15
     ? `<div class="boost">زوّد <strong>${esc(r.boost.name)}</strong> (${money(r.boost.price)}) والتوصيل يبقى مجاني: الإجمالي <b>${money(r.boost.total)}</b> بس.</div>` : "";
-  return `<a class="card${r.r.open === false ? " closed" : ""}" href="${esc(r.r.url)}" target="_blank" rel="noopener">
+  return `<a class="card${r.r.open === false ? " closed" : ""}" href="${esc(r.r.app || r.r.url)}" target="_blank" rel="noopener">
     <img class="thumb" src="${esc(r.img || r.r.logo || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
     <div>
       <p class="name">${esc(r.name)}</p>
@@ -160,27 +263,73 @@ function card(r){
         ${off >= 5 ? `<span class="off">-${off}٪</span>` : ""}
       </div>
       <div class="fees">${fees.join(" · ")}</div>
-    </div>
-    ${boost}
-  </a>`;
+    </div>${boost}</a>`;
+}
+function renderFood(){
+  const rows = foodRows().slice(0, 40);
+  $("#list").innerHTML = rows.length ? rows.map(foodCard).join("")
+    : `<div class="empty">مفيش نتايج. جرّب تشيل "مفتوح دلوقتي" أو "عروض بس".</div>`;
+}
+$("#q").oninput = renderFood; $("#onlyOffers").onchange = renderFood; $("#onlyOpen").onchange = renderFood;
+
+// ---------- groceries ----------
+$("#shop").value = lsGet("shop") || "";
+$("#shopGo").onclick = async () => {
+  const items = $("#shop").value.trim(); if (!items) return;
+  lsSet("shop", items);
+  const a = state.area || HOME;
+  if (!WORKER){ $("#shopOut").innerHTML = `<div class="empty">السوبرماركت محتاج السيرفر اللايف، ولسه مش متركّب.</div>`; return; }
+  $("#shopGo").disabled = true;
+  $("#shopOut").innerHTML = `<div class="status"><span class="spin"></span>بيقارن السوبرماركتات اللي بتوصّل لـ${esc(a.name)}…</div>`;
+  try {
+    const d = await fetch(`${WORKER}/grocery?area=${a.id}&slug=${a.slug}&items=${encodeURIComponent(items)}`).then(r => r.json());
+    if (d.error) throw new Error(d.error);
+    renderGrocery(d);
+  } catch (e) {
+    $("#shopOut").innerHTML = `<div class="empty">مقدرتش أقارن دلوقتي: ${esc(e.message)}</div>`;
+  } finally { $("#shopGo").disabled = false; }
+};
+function unitTxt(u){ return u ? `${money(u.v)} / ${u.u}` : ""; }
+function prod(p, d, tag){
+  const st = d.stores[p.store];
+  return `<a class="prod" href="${esc(st.app || st.url)}" target="_blank" rel="noopener">
+    <img src="${esc(p.img || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+    <div><div class="t">${esc(p.title)}${tag ? `<span class="tag">${tag}</span>` : ""}</div><div class="s">${esc(st.name)}${p.old ? ` · بدل ${money(p.old)}` : ""}</div></div>
+    <div class="p">${money(p.price)}<span class="u">${unitTxt(p.unit)}</span></div></a>`;
+}
+function renderGrocery(d){
+  let html = "";
+  const best = d.baskets[0];
+  if (best && best.found){
+    const st = d.stores[best.store];
+    html += `<a class="winner" href="${esc(st.app || st.url)}" target="_blank" rel="noopener">
+      <div class="k">أرخص سوبرماركت للقايمة كلها</div>
+      <h2>${esc(st.name)}</h2>
+      <div class="row"><span class="total">${money(best.subtotal)}<small>درهم للأصناف</small></span>
+      <span class="price">لقى ${best.found} من ${best.of}</span></div>
+      ${best.belowMin ? `<div class="warn">الحد الأدنى للطلب ${money(st.min)} درهم، هتحتاج تزوّد حاجة.</div>` : ""}
+      <div class="stores">${d.baskets.map(b => `<div class="store"><span>${esc(d.stores[b.store].name)} <small class="warn">${b.found < b.of ? `(ناقص ${b.of - b.found})` : ""}</small></span><b>${money(b.subtotal)}</b></div>`).join("")}</div>
+    </a>`;
+  }
+  for (const r of d.results){
+    const bestPick = d.baskets[0] ? r.perStoreCheapest[d.baskets[0].store] : null;
+    const seen = new Set(), rows = [];
+    for (const [p, tag] of [...r.cheapest.slice(0,3).map(p => [p,"أرخص سعر"]), ...r.bestValue.slice(0,2).map(p => [p,"أوفر"])]){
+      const k = p.store + p.title; if (seen.has(k)) continue; seen.add(k); rows.push(prod(p, d, tag));
+    }
+    html += `<div class="item"><h3>${esc(r.label)}</h3>
+      ${bestPick ? `<div class="s" style="color:var(--muted);font-size:12px;margin-bottom:4px">في السلة: ${esc(bestPick.title)} · ${money(bestPick.price)}</div>` : ""}
+      ${rows.join("") || `<div class="empty">مالقيتش حاجة.</div>`}</div>`;
+  }
+  if (d.unknown.length) html += `<div class="empty">مش عارف أدوّر على: ${esc(d.unknown.join("، "))}<br>اللي أعرفه: ${esc(d.supported.join("، "))}</div>`;
+  $("#shopOut").innerHTML = html;
 }
 
-function render(){
-  const list = rows().slice(0, 40);
-  $("#list").innerHTML = list.length ? list.map(card).join("")
-    : `<div class="empty">مفيش نتايج دلوقتي. جرّب تشيل "مفتوح دلوقتي" أو "عروض بس".</div>`;
-}
-
-$("#q").addEventListener("input", () => { chips(); render(); });
-$("#onlyOffers").addEventListener("change", render);
-$("#onlyOpen").addEventListener("change", render);
-
-fetch("data.json?v=" + Date.now()).then(r => r.json()).then(d => {
-  state.data = d;
-  if (!d.categories[state.cat]) state.cat = ORDER[0];
-  $("#meta").textContent = `الزاهية، عجمان · طلبات · اتحدّث ${ago(d.updated)}`;
-  chips(); render();
-}).catch(() => { $("#meta").textContent = "مقدرتش أحمّل الأسعار. جرّب تاني بعد شوية."; });
+// ---------- start ----------
+chips();
+tab(lsGet("tab") || "food");
+if (state.area){ $("#areaName").textContent = `${state.area.name}، ${state.area.city}`; loadFood(); }
+locate();
 </script>
 </body>
 </html>

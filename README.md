@@ -44,6 +44,7 @@ GoDaddy's default parking records (`A @ 15.197.148.33` and `A @ 3.33.130.190`) m
 
 A private page at `aahmedassem.com/food` that ranks Talabat deals near Al Zahya, Ajman by the estimated total you'd actually pay (talabat pro rules: free delivery from 30 AED, small-order fee under 20 AED, ~10% service fee capped at 3.25).
 
-- `food-tool/scrape.py` collects the deals. Food types and their keywords are in `CATEGORIES` at the top.
-- `.github/workflows/food-deals.yml` runs it five times a day and saves `food/data.json`. Run it any time from the Actions tab → food-deals → Run workflow.
-- `food/index.html` is the page; add it to the phone's home screen to use it like an app.
+- `food/index.html` is the page: a food tab and a supermarket tab (type a shopping list, get the cheapest store). It finds the nearest Talabat area from the phone's location; add it to the home screen to use it like an app.
+- `food-worker/` is the live server (Cloudflare Workers). It reads Talabat for any area on demand and caches results for a few hours. Cloudflare deploys it automatically from this repo. Its address goes in `WORKER` near the top of the page's script.
+- `food-tool/scrape.py` saves the home area's deals five times a day (`.github/workflows/food-deals.yml`) as an instant fallback; `food-tool/fetch_areas.py` refreshes Talabat's area list (`food/talabat-areas.json`).
+- Noon is not included: it blocks automated access on purpose.
