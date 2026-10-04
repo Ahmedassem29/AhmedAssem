@@ -71,6 +71,7 @@ const GROCERY = [
 ];
 
 // ---------- helpers ----------
+let ERRORS = [];   // per request, returned when ?debug=1
 const num = x => { const n = parseFloat(x); return Number.isFinite(n) ? n : 0; };
 const unescape = s => String(s || "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
 
@@ -81,7 +82,7 @@ async function page(url, ctx, ttl) {
   let res = await cache.match(key);
   if (!res) {
     res = await fetch(url, { headers: { "User-Agent": UA, "Accept": "text/html", "Accept-Language": "en-US,en;q=0.9" } });
-    if (!res.ok) throw new Error(`talabat ${res.status}`);
+    if (!res.ok) { ERRORS.push(`${res.status} ${url.slice(25, 110)}`); throw new Error(`talabat ${res.status}`); }
     const body = await res.text();
     res = new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}` } });
     ctx.waitUntil(cache.put(key, res.clone()));
@@ -126,7 +127,7 @@ async function food(area, slug, catKey, ctx) {
 
   const rows = (await inBatches(chosen, 12, async v => {
     let ms;
-    try { ms = (await page(`${BASE}${v.menuUrl}?aid=${area}`, ctx, FOOD_TTL)).initialMenuState; } catch { return []; }
+    try { ms = (await page(`${BASE}${v.menuUrl}?aid=${area}`, ctx, FOOD_TTL)).initialMenuState; } catch (e) { ERRORS.push("menu: " + e.message); return []; }
     const fee = num(v.deliveryFee);
     const rest = {
       name: unescape(v.name), url: `${BASE}${v.menuUrl}?aid=${area}`,
@@ -213,7 +214,7 @@ async function grocery(area, slug, list, ctx) {
       url: `${root}?aid=${area}`, app: v.branchUrl ? `${BASE}${v.branchUrl}` : null,
     };
     let cats;
-    try { cats = (await page(`${root}?aid=${area}`, ctx, GROCERY_TTL)).initialState.categories; } catch { return { store, products: [] }; }
+    try { cats = (await page(`${root}?aid=${area}`, ctx, GROCERY_TTL)).initialState.categories; } catch (e) { ERRORS.push("store: " + e.message); return { store, products: [] }; }
     const where = {};
     for (const c of cats) for (const s of c.subCategories || []) if (aislesNeeded.includes(s.slug) && !where[s.slug]) where[s.slug] = c.slug;
     const products = [];
@@ -225,7 +226,7 @@ async function grocery(area, slug, list, ctx) {
           const title = unescape(it.title), price = num(it.price), orig = num(it.originalPrice);
           products.push({ aisle: sub, title, price, old: orig > price ? orig : null, img: it.image, size: sizeOf(title) });
         }
-      } catch {}
+      } catch (e) { ERRORS.push("aisle: " + e.message); }
     }));
     return { store, products };
   }));
@@ -278,6 +279,8 @@ const json = (data, origin, status = 200, maxAge = 600) => new Response(JSON.str
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url), origin = req.headers.get("Origin");
+    ERRORS = [];
+    const debug = url.searchParams.get("debug") === "1";
     if (req.method === "OPTIONS") return new Response(null, { headers: { ...cors(origin), "Access-Control-Allow-Methods": "GET" } });
     const area = parseInt(url.searchParams.get("area"), 10);
     const slug = (url.searchParams.get("slug") || "").replace(/[^a-z0-9-]/g, "");
@@ -286,11 +289,13 @@ export default {
       if (!area || !slug) return json({ error: "area and slug are required" }, origin, 400);
       if (url.pathname === "/food") {
         const cat = url.searchParams.get("cat") || "pizza";
-        return json({ updated: new Date().toISOString(), ...(await food(area, slug, cat, ctx)) }, origin, 200, 1800);
+        const t0 = Date.now(), data = await food(area, slug, cat, ctx);
+        return json({ updated: new Date().toISOString(), ...data, ...(debug ? { ms: Date.now() - t0, errors: ERRORS.slice(0, 30) } : {}) }, origin, 200, debug ? 0 : 1800);
       }
       if (url.pathname === "/grocery") {
         const items = (url.searchParams.get("items") || "").slice(0, 300);
-        return json({ updated: new Date().toISOString(), ...(await grocery(area, slug, items, ctx)) }, origin, 200, 1800);
+        const t0 = Date.now(), data = await grocery(area, slug, items, ctx);
+        return json({ updated: new Date().toISOString(), ...data, ...(debug ? { ms: Date.now() - t0, errors: ERRORS.slice(0, 30) } : {}) }, origin, 200, debug ? 0 : 1800);
       }
       return json({ error: "not found" }, origin, 404);
     } catch (e) {
