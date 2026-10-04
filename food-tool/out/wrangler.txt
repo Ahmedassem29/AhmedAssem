@@ -1,0 +1,9 @@
+
+ ⛅️ wrangler 4.147.0
+────────────────────
+⎔ Starting local server...
+[wrangler:info] Ready on http://127.0.0.1:8787
+[wrangler:info] GET / 200 OK (5ms)
+[wrangler:info] GET /food 200 OK (13055ms)
+[wrangler:info] GET /grocery 200 OK (11384ms)
+[wrangler:info] GET /food 200 OK (16339ms)
