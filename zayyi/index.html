@@ -259,6 +259,7 @@ const EVENTS=[
 ];
 const EXAMPLE={id:"example",name:"",school:"st-marys-dubai",age:7,gender:"g",example:true};
 
+const API="https://zayyi.ahmedassem29.workers.dev";
 const STATIC={"reports": [{"school": "st-marys-dubai", "event": "flag", "date": "2026-11-03", "note": "يوم ملابس ملونة بألوان علم الإمارات (من تقويم المدرسة المعتمد ٢٠٢٦–٢٠٢٧)", "source": "https://www.stmarysdubai.com/wp-content/uploads/2026/08/SMCHS-KHDA-APPROVED-CALENDAR-2026-2027.pdf"}, {"school": "st-marys-dubai", "event": "national", "date": "2026-12-01", "note": "طابور اليوم الوطني ويوم ملابس ملونة: ألوان العلم أو لبس تقليدي (من تقويم المدرسة المعتمد)", "source": "https://www.stmarysdubai.com/wp-content/uploads/2026/08/SMCHS-KHDA-APPROVED-CALENDAR-2026-2027.pdf"}, {"school": "st-marys-dubai", "event": "sports", "date": "2027-01-19", "note": "حسب السنة: ١٩ يناير Y5–Y6، ٢٠ يناير Y7–Y8، ٢١ يناير Y9–Y11، ٢٢ يناير Y12–Y13، ٤ فبراير Y3–Y4، ٥ فبراير Y1–Y2", "source": "https://www.stmarysdubai.com/wp-content/uploads/2026/08/SMCHS-KHDA-APPROVED-CALENDAR-2026-2027.pdf"}, {"school": "isc-uaq", "event": "career", "date": "2026-09-25", "note": "يوم المهن للمرحلة الابتدائية — من إنستجرام المدرسة (choueifat_uaq)", "source": "https://www.instagram.com/choueifat_uaq/"}, {"school": "isc-uaq", "event": "football", "date": "2026-10-06", "note": "الطلبة لبسوا ألوان الإمارات لتشجيع المنتخب — من إنستجرام المدرسة (choueifat_uaq)", "source": "https://www.instagram.com/choueifat_uaq/"}], "history": [{"school": "st-marys-dubai", "event": "flag", "date": "2025-11-03", "note": "ملابس بألوان علم الإمارات", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/NOVEMBER-2025-CALENDAR-PARENTS-AND-STUDENTS.pdf"}, {"school": "st-marys-dubai", "event": "oddsocks", "date": "2025-11-14", "note": "يوم ملابس ملونة في أسبوع مكافحة التنمر بدل يوم الشرابات", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/NOVEMBER-2025-CALENDAR-PARENTS-AND-STUDENTS.pdf"}, {"school": "st-marys-dubai", "event": "national", "date": "2025-11-26", "note": "ألوان العلم أو لبس تقليدي", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/NOVEMBER-2025-CALENDAR-PARENTS-AND-STUDENTS.pdf"}, {"school": "st-marys-dubai", "event": "halloween", "date": "2025-10-31", "note": "يوم ملابس ملونة، والمدرسة منعت أزياء الهالوين", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/Coloured-Clothes-Day-31st-October-2025.pdf"}]};
 let lang="ar",kids=[],active=0,editing=null,openForm=null,flash=null;
 let db=null,canWrite=false,reports={},history={},unsubR=null,unsubH=null,subSchool=null;
@@ -412,11 +413,14 @@ document.getElementById("view").addEventListener("click",ev=>{
   if(ev.target.closest("[data-cancel]")){openForm=null;renderView()}
 });
 document.getElementById("view").addEventListener("submit",async ev=>{
-  ev.preventDefault();const f=ev.target.closest("[data-form]");if(!f||!db)return;
+  ev.preventDefault();const f=ev.target.closest("[data-form]");if(!f)return;
   const id=f.dataset.form,k=curKid();
   const date=document.getElementById("d-"+id).value,note=document.getElementById("n-"+id).value.trim().slice(0,140);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
-  try{await db.doc("reports/"+k.school+"__"+id).set({school:k.school,event:id,date,note,at:new Date().toISOString()});openForm=null;flash=id;renderView()}
+  try{
+    if(db){await db.doc("reports/"+k.school+"__"+id).set({school:k.school,event:id,date,note,at:new Date().toISOString()})}
+    else{const r=await fetch(API+"/reports",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({school:k.school,event:id,date,note})});if(!r.ok)throw 0;const j=await r.json();reports[id]=j.report}
+    openForm=null;flash=id;renderView()}
   catch(e){canWrite=false;openForm=null;renderView()}
 });
 function subscribe(){
@@ -424,7 +428,9 @@ function subscribe(){
   if(sid===subSchool)return;
   subSchool=sid;reports={};history={};
   if(unsubR){unsubR();unsubR=null}if(unsubH){unsubH();unsubH=null}
-  if(!db){STATIC.reports.filter(x=>x.school===sid).forEach(x=>reports[x.event]=x);STATIC.history.filter(x=>x.school===sid).forEach(x=>history[x.event]=x);return}
+  if(!db){STATIC.reports.filter(x=>x.school===sid).forEach(x=>reports[x.event]=x);STATIC.history.filter(x=>x.school===sid).forEach(x=>history[x.event]=x);
+    fetch(API+"/reports?school="+encodeURIComponent(sid)).then(r=>r.ok?r.json():Promise.reject()).then(j=>{if(sid!==curKid().school)return;(j.reports||[]).forEach(x=>{if(x&&x.event)reports[x.event]=x});canWrite=true;renderView()}).catch(()=>{});
+    return}
   unsubR=db.collection("reports").where("school","==",sid).onSnapshot(snap=>{if(sid!==curKid().school)return;const r={};snap.docs.forEach(d=>{const x=d.data();if(x&&x.event)r[x.event]=x});reports=r;renderView()},()=>{});
   unsubH=db.collection("history").where("school","==",sid).onSnapshot(snap=>{if(sid!==curKid().school)return;const r={};snap.docs.forEach(d=>{const x=d.data();if(x&&x.event)r[x.event]=x});history=r;renderView()},()=>{});
 }
