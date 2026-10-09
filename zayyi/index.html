@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d7a63">
+<title>زيّي · Zayyi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: app shell — slim top bar, child switcher, a bold "next dress-up day" card, then a month-by-month timeline */
+:root{
+  --bg:#f2f4f1; --surface:#ffffff; --raise:#f7f8f6; --ink:#13203a; --muted:#5b6679; --line:#e0e4e6;
+  --accent:#0d7a63; --accent-soft:#dcefe9; --on-accent:#ffffff;
+  --pop:#ff6a48; --pop-soft:#ffe6df; --on-pop:#2a0d06;
+  --sure:#0d7a63; --sure-bg:#dcefe9; --guess:#8a5a00; --guess-bg:#fbefd4;
+  --display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic","Readex Pro",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d131e; --surface:#151d2b; --raise:#1b2536; --ink:#e8edf5; --muted:#97a3b6; --line:#263247;
+  --accent:#3fc9a4; --accent-soft:#163a33; --on-accent:#05211a;
+  --pop:#ff8a6c; --pop-soft:#3a2119; --on-pop:#2a0d06;
+  --sure:#7fe0c3; --sure-bg:#163a33; --guess:#f2c46b; --guess-bg:#3a2d10; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d131e; --surface:#151d2b; --raise:#1b2536; --ink:#e8edf5; --muted:#97a3b6; --line:#263247;
+  --accent:#3fc9a4; --accent-soft:#163a33; --on-accent:#05211a;
+  --pop:#ff8a6c; --pop-soft:#3a2119; --on-pop:#2a0d06;
+  --sure:#7fe0c3; --sure-bg:#163a33; --guess:#f2c46b; --guess-bg:#3a2d10; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .in{max-width:980px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center}
+.mark svg{width:20px;height:20px}
+.logo small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--muted);display:block;line-height:1}
+.lang{margin-inline-start:auto;display:flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.lang button{border:0;background:transparent;padding:4px 12px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* hero */
+.hero{padding-block:34px 18px}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,6.4vw,50px);line-height:1.12;letter-spacing:-.02em;margin:0;max-width:16ch;text-wrap:balance}
+.hero p{color:var(--muted);margin:12px 0 0;max-width:58ch;font-size:16px}
+
+/* kids */
+.kids{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:22px}
+.kid{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 14px 5px 5px;cursor:pointer;text-align:start}
+[dir="rtl"] .kid{padding:5px 5px 5px 14px}
+.kid[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:14px;background:var(--accent-soft);color:var(--accent)}
+.kid .t{line-height:1.25}
+.kid .t b{display:block;font-size:14px}
+.kid .t span{font-size:12px;color:var(--muted)}
+.add{border:1px dashed var(--muted);background:transparent;border-radius:999px;padding:9px 16px;cursor:pointer;font-weight:600;color:var(--ink)}
+.example{margin-top:12px;font-size:13px;color:var(--muted)}
+
+/* form card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.kidform{margin-top:16px}
+.kidform h2{font-family:var(--display);font-size:20px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid .full{grid-column:1/-1}
+@media (max-width:620px){.grid{grid-template-columns:1fr}}
+label.l{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.input,select{width:100%;background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.seg{display:flex;gap:8px}
+.seg label{flex:1;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--raise);font-weight:600}
+.seg input:checked+span{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.btn{border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:9px 18px;font-weight:600;cursor:pointer}
+.btn.solid{background:var(--ink);color:var(--bg)}
+.btn.ghost{border-color:transparent;color:var(--muted)}
+.btn.sm{padding:5px 12px;font-size:13px}
+
+/* next card */
+.next{margin-top:18px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);border-radius:calc(var(--r) + 4px);overflow:hidden;background:var(--pop);color:var(--on-pop)}
+@media (max-width:720px){.next{grid-template-columns:1fr}}
+.next .a{padding:24px}
+.next .eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.next h2{font-family:var(--display);font-size:clamp(26px,5vw,38px);line-height:1.15;margin:6px 0 8px;letter-spacing:-.01em}
+.next .fit{font-size:15px;max-width:46ch}
+.next .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.next .acts a{background:var(--on-pop);color:var(--pop);text-decoration:none;font-weight:700;border-radius:999px;padding:9px 16px;font-size:14px}
+.next .acts a.alt{background:transparent;color:var(--on-pop);border:1px solid var(--on-pop)}
+.next .b{background:color-mix(in srgb,var(--on-pop) 8%,transparent);padding:24px;display:flex;flex-direction:column;justify-content:center;gap:2px;border-inline-start:1px solid color-mix(in srgb,var(--on-pop) 18%,transparent)}
+.big{font-family:var(--display);font-weight:700;font-size:clamp(56px,11vw,88px);line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.next .b small{font-size:14px;font-weight:600}
+.next .b .dd{margin-top:10px;font-size:14px;opacity:.85}
+
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;margin-top:30px}
+.meta h3{font-family:var(--display);font-size:22px;margin:0}
+.meta span{color:var(--muted);font-size:14px}
+.meter{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:10px;max-width:360px}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.progress{font-size:13px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+
+/* timeline */
+.month{margin-top:26px}
+.month h4{font-family:var(--display);font-size:15px;color:var(--muted);font-weight:600;margin:0 0 10px;letter-spacing:.02em}
+.list{display:grid;gap:10px}
+.ev{display:grid;grid-template-columns:64px minmax(0,1fr);gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.ev.past{opacity:.55}
+.ev.is-next{border-color:var(--pop);box-shadow:0 0 0 1px var(--pop)}
+.date{text-align:center;border-radius:14px;background:var(--raise);padding:8px 4px;align-self:start;font-variant-numeric:tabular-nums}
+.date .d{font-family:var(--display);font-size:26px;font-weight:700;line-height:1}
+.date .m{font-size:12px;color:var(--muted);margin-top:2px}
+.date .w{font-size:11px;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.ev h5{margin:0;font-family:var(--display);font-size:17px;font-weight:600}
+.badge{font-size:12px;border-radius:999px;padding:1px 10px;font-weight:600}
+.b-sure{background:var(--sure-bg);color:var(--sure)}
+.b-guess{background:var(--guess-bg);color:var(--guess)}
+.sw{display:flex}
+.sw i{width:15px;height:15px;border-radius:50%;border:2px solid var(--surface);display:block;margin-inline-start:-4px}
+.sw i:first-child{margin-inline-start:0}
+.when{color:var(--muted);font-size:13px;margin-top:2px}
+.when a,.hist a{color:var(--accent);font-weight:600}
+.hist{font-size:13px;color:var(--muted);margin-top:4px}
+.wear{margin-top:10px;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips span{background:var(--raise);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px}
+.links{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:12px;font-size:14px}
+.links a{color:var(--accent);font-weight:600;text-decoration:none}
+.links a:hover{text-decoration:underline}
+.dform{margin-top:12px;display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);gap:10px;background:var(--raise);border:1px dashed var(--line);border-radius:14px;padding:12px}
+.dform .full{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:560px){.dform{grid-template-columns:1fr}}
+.msg{font-size:13px;color:var(--sure);font-weight:600}
+.note{color:var(--muted);font-size:13px;margin-top:14px}
+
+/* how */
+.how{margin-top:40px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:720px){.how{grid-template-columns:1fr}}
+.how .card{padding:18px}
+.how .n{font-family:var(--display);font-weight:700;color:var(--accent);font-size:13px}
+.how h6{font-family:var(--display);font-size:16px;margin:4px 0 4px}
+.how p{margin:0;color:var(--muted);font-size:14px}
+footer{margin-top:36px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+footer ul{padding-inline-start:18px;margin:6px 0}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.kid,.btn,.lang button{transition:background .15s,box-shadow .15s}}
+</style>
+</head>
+<body>
+
+<header class="bar"><div class="in">
+  <div class="logo"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-5 3 2 5 2-1v11h10V10l2 1 2-5-5-3c-.5 1.7-2.1 3-4 3s-3.5-1.3-4-3z"/></svg></span><span><span id="brand"></span><small id="brandSub"></small></span></div>
+  <div class="lang" role="group" aria-label="Language"><button id="l-ar" data-lang="ar">ع</button><button id="l-en" data-lang="en">EN</button></div>
+</div></header>
+
+<div class="wrap">
+  <section class="hero"><h1 id="h1"></h1><p id="hsub"></p>
+    <div class="kids" id="kids"></div>
+    <div id="formHost"></div>
+  </section>
+  <main id="view"></main>
+  <section class="how" id="how"></section>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const T={
+ ar:{brand:"زيّي",brandSub:"لبس كل مناسبة في المدرسة",h1:"متفوّتش ولا يوم لبس في المدرسة",hsub:"ضيف مدرسة طفلك وسنه، ونعرّفك بكل يوم المدرسة بتطلب فيه لبس معيّن، ونرشحلك اللبس المناسب ليه قبلها بوقت.",addKid:"ضيف طفل",addFirst:"ضيف طفلك",example:"ده مثال لطفل في St Mary's دبي. ضيف طفلك عشان تشوف مواعيد مدرسته.",formTitleNew:"طفل جديد",formTitleEdit:"تعديل بيانات الطفل",name:"اسم الطفل (اختياري)",namePh:"مثلاً: ليلى",emirate:"الإمارة",school:"المدرسة",age:"السن",gender:"النوع",boy:"ولد",girl:"بنت",save:"احفظ",cancel:"إلغاء",edit:"عدّل",remove:"امسح",yrs:n=>`${n} سنين`,yr:n=>n>10?`${n} سنة`:`${n} سنين`,stage:{kg:"روضة",pri:"ابتدائي",sec:"إعدادي وثانوي"},child:"الطفل",next:"المناسبة الجاية",today:"النهارده",daysLeft:"يوم فاضل",tomorrow:"بكرة",forKid:(n,s)=>`${n} · ${s}`,amazon:"اشتري من أمازون",noon:"اشتري من نون",confirmed:"متأكد من المدرسة",official:"تاريخ رسمي، لسه المدرسة متأكدتش",expected:"تاريخ متوقع",need:"هتحتاج",fromCirc:"التاريخ ده من تعميم المدرسة",lastYear:"السنة اللي فاتت",source:"المصدر",haveDate:"عندك التاريخ من المدرسة؟",editDate:"عدّل التاريخ",dateLbl:"التاريخ في المدرسة",noteLbl:"ملاحظة من التعميم (اختياري)",notePh:"مثلاً: KG بس، أو اللون المطلوب",saved:"اتحفظ، وكل أولياء الأمور في المدرسة هيشوفوه",progress:(a,b)=>`${a} من ${b} مناسبة متأكدة من أولياء أمور المدرسة`,signin:"إضافة التواريخ متاحة لأولياء الأمور المسجلين.",inDays:n=>`بعد ${n} يوم`,none:"مفيش مناسبات جاية لسن الطفل ده في المدرسة دي.",size:a=>`مقاس ${a} سنين`,
+  how:[["١","ضيف طفلك","اختار مدرسته وسنه، وتقدر تضيف أكتر من طفل."],["٢","شوف المواعيد","كل مناسبة لبس في السنة، ومعاها اللبس المناسب لسن ونوع طفلك."],["٣","أكّد من التعميم","لما يوصلك تعميم، ضيف التاريخ، وكل أولياء أمور المدرسة هيشوفوه."]],
+  foot:"قبل ما ولي أمر يأكد التاريخ، بنعرض التاريخ المتوقع من المواعيد الرسمية. المواعيد الهجرية تقديرية لحد ما الهلال يتأكد.",sources:"المصادر"},
+ en:{brand:"Zayyi",brandSub:"The right outfit for every school day",h1:"Never miss a school dress-up day",hsub:"Add your child's school and age. We'll show every day the school asks for a special outfit, and suggest what fits your child, well ahead of time.",addKid:"Add a child",addFirst:"Add your child",example:"This is an example child at St Mary's Dubai. Add your own child to see their school's dates.",formTitleNew:"New child",formTitleEdit:"Edit child",name:"Child's name (optional)",namePh:"e.g. Layla",emirate:"Emirate",school:"School",age:"Age",gender:"Gender",boy:"Boy",girl:"Girl",save:"Save",cancel:"Cancel",edit:"Edit",remove:"Remove",yrs:n=>`${n} years`,yr:n=>`${n} years`,stage:{kg:"KG",pri:"Primary",sec:"Secondary"},child:"Child",next:"Next dress-up day",today:"Today",daysLeft:"days to go",tomorrow:"Tomorrow",forKid:(n,s)=>`${n} · ${s}`,amazon:"Shop on Amazon",noon:"Shop on noon",confirmed:"Confirmed by school",official:"Official date, school not confirmed yet",expected:"Expected date",need:"You'll need",fromCirc:"Date from the school circular",lastYear:"Last year",source:"Source",haveDate:"Got the date from school?",editDate:"Edit date",dateLbl:"Date at school",noteLbl:"Note from the circular (optional)",notePh:"e.g. KG only, or the colour asked for",saved:"Saved. Every parent at this school will see it.",progress:(a,b)=>`${a} of ${b} days confirmed by parents at this school`,signin:"Signed-in parents can add dates.",inDays:n=>`in ${n} days`,none:"No upcoming dress-up days for this age at this school.",size:a=>`size ${a} years`,
+  how:[["1","Add your child","Pick their school and age. You can add more than one child."],["2","See the dates","Every dress-up day of the year, with outfits that fit your child's age and gender."],["3","Confirm from circulars","When a circular arrives, add the date and every parent at the school sees it."]],
+  foot:"Until a parent confirms a date, we show the expected date from official calendars. Hijri dates are estimates until the moon is sighted.",sources:"Sources"}
+};
+const EMIRATES={dubai:["دبي","Dubai"],abudhabi:["أبوظبي","Abu Dhabi"],alain:["العين","Al Ain"],sharjah:["الشارقة","Sharjah"],ajman:["عجمان","Ajman"],uaq:["أم القيوين","Umm Al Quwain"],rak:["رأس الخيمة","Ras Al Khaimah"]};
+const SCHOOLS=[
+ ["gems-wellington","GEMS Wellington International School","dubai","british"],["gems-world-academy","GEMS World Academy","dubai","ib"],["gems-jps","GEMS Jumeirah Primary School","dubai","british"],["gems-royal-dubai","GEMS Royal Dubai School","dubai","british"],["gems-founders-barsha","GEMS Founders School – Al Barsha","dubai","british"],["gems-modern","GEMS Modern Academy","dubai","indian"],["gems-daa","Dubai American Academy","dubai","american"],["dubai-college","Dubai College","dubai","british"],["jess-jumeirah","JESS Jumeirah","dubai","british"],["jess-ranches","JESS Arabian Ranches","dubai","british"],["dess","Dubai English Speaking School","dubai","british"],["repton-dubai","Repton School Dubai","dubai","british"],["repton-barsha","Repton Al Barsha","dubai","british"],["kings-dubai","Kings' School Dubai","dubai","british"],["kings-barsha","Kings' School Al Barsha","dubai","british"],["dbs","Dubai British School – Emirates Hills","dubai","british"],["jbs","Jumeirah Baccalaureate School","dubai","ib"],["uptown","Uptown International School","dubai","ib"],["raha-gardens","Raha International School – Gardens","dubai","ib"],["nas-dubai","Nord Anglia International School Dubai","dubai","british"],["brighton-dubai","Brighton College Dubai","dubai","british"],["asd","American School of Dubai","dubai","american"],["st-marys-dubai","St Mary's Catholic High School Dubai","dubai","british"],["isc-dubai","International School of Choueifat – Dubai","dubai","sabis"],["isc-dip","International School of Choueifat – DIP","dubai","sabis"],
+ ["bis-ad","British International School Abu Dhabi","abudhabi","british"],["cranleigh-ad","Cranleigh Abu Dhabi","abudhabi","british"],["brighton-ad","Brighton College Abu Dhabi","abudhabi","british"],["repton-ad","Repton Abu Dhabi","abudhabi","british"],["bsak","British School Al Khubairat","abudhabi","british"],["raha-kc","Raha International School – Khalifa City","abudhabi","ib"],["yasmina","Al Yasmina Academy","abudhabi","british"],["gaa-ad","GEMS American Academy – Abu Dhabi","abudhabi","american"],["isc-ad","International School of Choueifat – Abu Dhabi","abudhabi","sabis"],
+ ["isc-alain","International School of Choueifat – Al Ain","alain","sabis"],["brighton-alain","Brighton College Al Ain","alain","british"],
+ ["isc-sharjah","International School of Choueifat – Sharjah","sharjah","sabis"],["wesgreen","Wesgreen International School","sharjah","british"],["gems-cambridge-sharjah","GEMS Cambridge International Private School – Sharjah","sharjah","british"],["gems-westminster-sharjah","GEMS Westminster School – Sharjah","sharjah","british"],
+ ["isc-ajman","International School of Choueifat – Ajman","ajman","sabis"],
+ ["isc-uaq","International School of Choueifat – Umm Al Quwain","uaq","sabis"],["sais-uaq","Sharjah American International School – UAQ","uaq","american"],
+ ["isc-rak","International School of Choueifat – Ras Al Khaimah","rak","sabis"]
+].map(([id,name,em,curr])=>({id,name,em,curr}));
+const ALLC=["british","american","ib","sabis","indian"],NOTIN=["british","american","ib","sabis"];
+const FLAG=["#d52b1e","#00843d","#ffffff","#000000"];
+const E=(o)=>Object.assign({cur:ALLC,ages:[3,18]},o);
+const EVENTS=[
+ E({id:"career",d:"2026-09-25",ages:[3,11],sw:["#ffffff","#1e88e5","#e53935"],q:"career costume",
+  name:["يوم المهن","Career Day"],exp:["مفيش تاريخ ثابت، كل مدرسة بتحدد يومها","No fixed date; each school sets its own"],
+  wear:["زي مهنة: دكتور، شرطي، مهندس، طباخ.","A profession costume: doctor, police officer, engineer or chef."],
+  buy:[["زي دكتور","زي شرطي","زي مهندس"],["Doctor costume","Police costume","Engineer costume"]]}),
+ E({id:"football",d:"2026-10-06",sw:FLAG,q:"UAE national team jersey",
+  name:["يوم تشجيع منتخب الإمارات","UAE Team Support Day"],exp:["قبل ماتشات المنتخب المهمة، والمدرسة بتعلن قبلها بأيام","Before big national team matches; schools announce a few days ahead"],
+  wear:["ألوان علم الإمارات أو تيشيرت المنتخب.","UAE flag colours or the national team shirt."],
+  buy:[["تيشيرت المنتخب","علم يد","وشاح بألوان العلم"],["UAE team shirt","Hand flag","Flag-colour scarf"]]}),
+ E({id:"pink",d:"2026-10-22",sw:["#ec5c9b","#f9b6d2"],q:"pink t-shirt",
+  name:["يوم اللون الوردي","Pink Day"],exp:["أواخر أكتوبر، بعد إجازة منتصف الترم","Late October, after the mid-term break"],
+  wear:["لبس وردي وشريطة وردية.","Pink clothes and a pink ribbon."],
+  buy:[["تيشيرت وردي","دبوس شريطة وردية"],["Pink T-shirt","Pink ribbon pin"]]}),
+ E({id:"halloween",d:"2026-10-29",cur:["british","american","ib"],sw:["#f28c28","#7a3fb0","#2fb5a5"],q:"costume",
+  name:["يوم الملابس الملونة / هالوين","Colour Day / Halloween"],exp:["٢٩–٣٠ أكتوبر، ومدارس كتير بتمنع أزياء الهالوين","29–30 October; many schools don't allow Halloween costumes"],
+  wear:["لبس ملون، أو زي شخصية لو المدرسة بتسمح.","Colourful clothes, or a character costume if the school allows it."],
+  buy:[["لبس ملون","زي شخصية"],["Colourful outfit","Character costume"]]}),
+ E({id:"flag",d:"2026-11-03",fixed:true,sw:FLAG,q:"UAE flag t-shirt",
+  name:["يوم العلم","Flag Day"],exp:["الثلاثاء ٣ نوفمبر","Tuesday 3 November"],
+  wear:["ألوان علم الإمارات، والطلبة بيمسكوا أعلام.","UAE flag colours; children carry flags."],
+  buy:[["علم يد","تيشيرت بألوان العلم","دبوس العلم"],["Hand flag","Flag-colour T-shirt","Flag pin"]]}),
+ E({id:"diwali",d:"2026-11-05",cur:["indian"],sw:["#f4a300","#c2185b","#ffd54f"],qB:"kurta",qG:"lehenga",
+  name:["ديوالي","Diwali"],exp:["ديوالي ٨ نوفمبر، والمدرسة بتحتفل قبلها","Diwali is 8 November; schools celebrate the days before"],
+  wearB:["كورتا هندي تقليدي.","A traditional kurta."],wearG:["ليهنغا أو لبس هندي تقليدي.","A lehenga or traditional Indian outfit."],
+  buyB:[["كورتا ولادي"],["Boys' kurta"]],buyG:[["ليهنغا بناتي"],["Girls' lehenga"]]}),
+ E({id:"oddsocks",d:"2026-11-16",fixed:true,cur:["british","ib"],sw:["#e53935","#1e88e5","#fdd835"],q:"colorful socks",
+  name:["يوم الشرابات المختلفة","Odd Socks Day"],exp:["الاثنين ١٦ نوفمبر، أول يوم في أسبوع مكافحة التنمر","Monday 16 November, start of Anti-Bullying Week"],
+  wear:["شرابات ملونة مش متطابقة.","Mismatched, colourful socks."],
+  buy:[["شرابات ملونة","شرابات بأشكال مضحكة"],["Colourful socks","Fun novelty socks"]]}),
+ E({id:"national",d:"2026-11-27",sw:FLAG,qB:"kandura",qG:"jalabiya",
+  name:["اليوم الوطني","National Day"],exp:["بين ٢٦ نوفمبر و١ ديسمبر، قبل إجازة ٢–٣ ديسمبر","Between 26 November and 1 December, before the 2–3 December holiday"],
+  wearB:["كندورة وغترة وعقال، أو ألوان العلم.","A kandura with ghutra and agal, or flag colours."],wearG:["جلابية أو كندورة بناتي مع شيلة، أو ألوان العلم.","A jalabiya or girls' kandura with a shayla, or flag colours."],
+  buyB:[["كندورة ولادي","غترة وعقال أطفال","علم يد"],["Boys' kandura","Kids' ghutra & agal","Hand flag"]],buyG:[["جلابية بناتي","شيلة","علم يد"],["Girls' jalabiya","Shayla","Hand flag"]]}),
+ E({id:"arabic",d:"2026-12-10",sw:["#6d4c41","#c9a227"],qB:"kandura",qG:"jalabiya",
+  name:["اليوم العالمي للغة العربية","Arabic Language Day"],exp:["١٨ ديسمبر في الإجازة، فالمدرسة غالباً بتحتفل قبلها","18 December falls in the break, so schools usually celebrate earlier"],
+  wearB:["لبس عربي تقليدي، في المدارس اللي بتطلبه.","Traditional Arabic dress, where the school asks for it."],wearG:["لبس عربي تقليدي، في المدارس اللي بتطلبه.","Traditional Arabic dress, where the school asks for it."],
+  buyB:[["كندورة ولادي"],["Boys' kandura"]],buyG:[["جلابية بناتي"],["Girls' jalabiya"]]}),
+ E({id:"sports",d:"2027-01-21",sw:["#e53935","#1e88e5","#43a047","#fdd835"],q:"sports t-shirt",
+  name:["اليوم الرياضي","Sports Day"],exp:["مفيش تاريخ ثابت، وأحياناً بيختلف حسب السنة الدراسية","No fixed date; often differs by year group"],
+  wear:["لبس رياضي وتيشيرت بلون فريق الطفل في المدرسة.","Sportswear and a T-shirt in the child's house colour."],
+  buy:[["تيشيرت بلون الفريق","شورت رياضي","كاب"],["House-colour T-shirt","Sports shorts","Cap"]]}),
+ E({id:"haqallaila",d:"2027-01-24",cur:NOTIN,ages:[3,12],sw:["#00843d","#c9a227","#8e24aa"],q:"haq al laila bag",
+  name:["حق الليلة","Haq Al Laila"],exp:["١٥ شعبان، حوالي ٢٤ يناير حسب الهلال","15 Sha'ban, around 24 January depending on the moon"],
+  wearB:["كندورة إماراتية، وشنطة «خريطة» للحلويات.","An Emirati kandura and a kharyta bag for sweets."],wearG:["جلابية أو ثوب تقليدي، وشنطة «خريطة» للحلويات.","A jalabiya or traditional dress and a kharyta bag for sweets."],
+  buyB:[["شنطة خريطة","كندورة ولادي","حلويات ومكسرات"],["Kharyta bag","Boys' kandura","Sweets & nuts"]],buyG:[["شنطة خريطة","جلابية بناتي","حلويات ومكسرات"],["Kharyta bag","Girls' jalabiya","Sweets & nuts"]]}),
+ E({id:"international",d:"2027-02-04",sw:["#1e88e5","#e53935","#fdd835","#43a047"],q:"national costume",
+  name:["اليوم الدولي","International Day"],exp:["غالباً فبراير، وممكن يتأجل لبعد عيد الفطر","Usually February; may move to after Eid Al Fitr"],
+  wear:["زي البلد الأصلي للطفل أو ألوان علمها.","Traditional dress from the child's home country, or its flag colours."],
+  buy:[["زي تقليدي حسب الجنسية","علم البلد"],["National costume","Country flag"]]}),
+ E({id:"worldbook",d:"2027-03-04",cur:["british","ib"],ages:[3,14],sw:["#3949ab","#ff7043"],q:"book character costume",
+  name:["يوم الكتاب العالمي","World Book Day"],exp:["الخميس ٤ مارس في المنهج البريطاني","Thursday 4 March for British-curriculum schools"],
+  wear:["زي شخصية من كتاب.","A costume of a character from a book."],
+  buy:[["زي شخصية كتاب","إكسسوارات الزي"],["Book character costume","Costume accessories"]]}),
+ E({id:"childrensday",d:"2027-03-15",fixed:true,cur:NOTIN,ages:[3,12],sw:["#00843d","#d52b1e"],qB:"kandura",qG:"jalabiya",
+  name:["يوم الطفل الإماراتي","Emirati Children's Day"],exp:["الاثنين ١٥ مارس","Monday 15 March"],
+  wearB:["كندورة إماراتية، في المدارس اللي بتطلبها.","An Emirati kandura, where the school asks for it."],wearG:["جلابية أو لبس إماراتي تقليدي، في المدارس اللي بتطلبه.","A jalabiya or traditional Emirati dress, where the school asks for it."],
+  buyB:[["كندورة ولادي"],["Boys' kandura"]],buyG:[["جلابية بناتي"],["Girls' jalabiya"]]}),
+ E({id:"autism",d:"2027-04-02",sw:["#1e88e5","#90caf9"],q:"blue t-shirt",
+  name:["يوم التوعية بالتوحد","Autism Awareness Day"],exp:["الجمعة ٢ أبريل، قبل إجازة الربيع","Friday 2 April, before spring break"],
+  wear:["لبس أزرق.","Blue clothes."],buy:[["تيشيرت أزرق"],["Blue T-shirt"]]}),
+ E({id:"earth",d:"2027-04-22",sw:["#43a047","#1e88e5"],q:"green t-shirt",
+  name:["يوم الأرض","Earth Day"],exp:["الخميس ٢٢ أبريل","Thursday 22 April"],
+  wear:["لبس أخضر.","Green clothes."],buy:[["تيشيرت أخضر"],["Green T-shirt"]]})
+];
+const EXAMPLE={id:"example",name:"",school:"st-marys-dubai",age:7,gender:"g",example:true};
+
+const STATIC={"reports": [{"school": "st-marys-dubai", "event": "flag", "date": "2026-11-03", "note": "يوم ملابس ملونة بألوان علم الإمارات (من تقويم المدرسة المعتمد ٢٠٢٦–٢٠٢٧)", "source": "https://www.stmarysdubai.com/wp-content/uploads/2026/08/SMCHS-KHDA-APPROVED-CALENDAR-2026-2027.pdf"}, {"school": "st-marys-dubai", "event": "national", "date": "2026-12-01", "note": "طابور اليوم الوطني ويوم ملابس ملونة: ألوان العلم أو لبس تقليدي (من تقويم المدرسة المعتمد)", "source": "https://www.stmarysdubai.com/wp-content/uploads/2026/08/SMCHS-KHDA-APPROVED-CALENDAR-2026-2027.pdf"}, {"school": "st-marys-dubai", "event": "sports", "date": "2027-01-19", "note": "حسب السنة: ١٩ يناير Y5–Y6، ٢٠ يناير Y7–Y8، ٢١ يناير Y9–Y11، ٢٢ يناير Y12–Y13، ٤ فبراير Y3–Y4، ٥ فبراير Y1–Y2", "source": "https://www.stmarysdubai.com/wp-content/uploads/2026/08/SMCHS-KHDA-APPROVED-CALENDAR-2026-2027.pdf"}, {"school": "isc-uaq", "event": "career", "date": "2026-09-25", "note": "يوم المهن للمرحلة الابتدائية — من إنستجرام المدرسة (choueifat_uaq)", "source": "https://www.instagram.com/choueifat_uaq/"}, {"school": "isc-uaq", "event": "football", "date": "2026-10-06", "note": "الطلبة لبسوا ألوان الإمارات لتشجيع المنتخب — من إنستجرام المدرسة (choueifat_uaq)", "source": "https://www.instagram.com/choueifat_uaq/"}], "history": [{"school": "st-marys-dubai", "event": "flag", "date": "2025-11-03", "note": "ملابس بألوان علم الإمارات", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/NOVEMBER-2025-CALENDAR-PARENTS-AND-STUDENTS.pdf"}, {"school": "st-marys-dubai", "event": "oddsocks", "date": "2025-11-14", "note": "يوم ملابس ملونة في أسبوع مكافحة التنمر بدل يوم الشرابات", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/NOVEMBER-2025-CALENDAR-PARENTS-AND-STUDENTS.pdf"}, {"school": "st-marys-dubai", "event": "national", "date": "2025-11-26", "note": "ألوان العلم أو لبس تقليدي", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/NOVEMBER-2025-CALENDAR-PARENTS-AND-STUDENTS.pdf"}, {"school": "st-marys-dubai", "event": "halloween", "date": "2025-10-31", "note": "يوم ملابس ملونة، والمدرسة منعت أزياء الهالوين", "source": "https://www.stmarysdubai.com/wp-content/uploads/2025/10/Coloured-Clothes-Day-31st-October-2025.pdf"}]};
+let lang="ar",kids=[],active=0,editing=null,openForm=null,flash=null;
+let db=null,canWrite=false,reports={},history={},unsubR=null,unsubH=null,subSchool=null;
+try{lang=localStorage.getItem("dd-lang")||"ar";kids=JSON.parse(localStorage.getItem("dd-kids")||"[]");active=+localStorage.getItem("dd-active")||0}catch(e){kids=[]}
+if(!Array.isArray(kids))kids=[];
+const persist=()=>{try{localStorage.setItem("dd-lang",lang);localStorage.setItem("dd-kids",JSON.stringify(kids));localStorage.setItem("dd-active",String(active))}catch(e){}};
+const L=()=>lang==="ar"?0:1, t=()=>T[lang];
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const num=n=>lang==="ar"?new Intl.NumberFormat("ar-EG",{useGrouping:false}).format(n):String(n);
+const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const today=new Date();today.setHours(0,0,0,0);
+const daysTo=s=>Math.round((parse(s)-today)/864e5);
+const loc=()=>lang==="ar"?"ar-EG":"en-GB";
+const fmt=(d,o)=>new Intl.DateTimeFormat(loc(),o).format(d);
+const stageOf=a=>a<=5?"kg":a<=11?"pri":"sec";
+const kidList=()=>kids.length?kids:[EXAMPLE];
+const curKid=()=>{const k=kidList();if(active>=k.length)active=0;return k[active]};
+const schoolOf=id=>SCHOOLS.find(s=>s.id===id)||SCHOOLS[0];
+const pick=(e,key,g)=>{const v=e[key+(g==="b"?"B":"G")]||e[key];return v?v[L()]:""};
+function query(e,k){const base=(k.gender==="b"?e.qB:e.qG)||e.q;return `${k.gender==="b"?"boys":"girls"} ${base} ${k.age} years`}
+
+function eventsFor(k){
+  const s=schoolOf(k.school);
+  return EVENTS.filter(e=>e.cur.includes(s.curr)&&k.age>=e.ages[0]&&k.age<=e.ages[1]).map(e=>{
+    const r=reports[e.id],h=history[e.id];
+    return {...e,date:r&&r.date?r.date:e.d,confirmed:!!(r&&r.date),rnote:r&&r.note||"",src:r&&r.source||"",hist:h&&h.date?h:null};
+  }).sort((a,b)=>a.date<b.date?-1:1);
+}
+
+function renderChrome(){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+  document.getElementById("brand").textContent=t().brand;
+  document.getElementById("brandSub").textContent=t().brandSub;
+  document.getElementById("h1").textContent=t().h1;
+  document.getElementById("hsub").textContent=t().hsub;
+  document.getElementById("l-ar").setAttribute("aria-pressed",lang==="ar");
+  document.getElementById("l-en").setAttribute("aria-pressed",lang==="en");
+  document.getElementById("how").innerHTML=t().how.map(([n,h,p])=>`<div class="card"><div class="n">${n}</div><h6>${h}</h6><p>${p}</p></div>`).join("");
+  document.getElementById("foot").innerHTML=`<p>${t().foot}</p><p>${t().sources}:</p><ul>
+   <li><a href="https://gulfnews.com/living-in-uae/education/uae-school-calendar-2026-27-term-dates-and-holidays-1.500637553" target="_blank" rel="noopener">Gulf News – UAE school calendar 2026-27</a></li>
+   <li><a href="https://gulfnews.com/living-in-uae/ask-us/uae-public-holidays-2027-1.500638729" target="_blank" rel="noopener">Gulf News – UAE public holidays 2027</a></li>
+   <li><a href="https://thenationalnews.com/news/uae/2024/11/29/national-day-school-celebrations" target="_blank" rel="noopener">The National – National Day school celebrations</a></li>
+   <li><a href="https://gulfnews.com/uae/haq-al-laila-celebrations-in-uae-1.1203024" target="_blank" rel="noopener">Gulf News – Haq Al Laila</a></li>
+   <li><a href="https://www.awarenessdays.com/awareness-days-calendar/anti-bullying-week-2026/" target="_blank" rel="noopener">Anti-Bullying Week 2026 / Odd Socks Day</a></li>
+   <li><a href="https://days.to/world-book-day/2027" target="_blank" rel="noopener">World Book Day 2027</a></li></ul>`;
+}
+
+function kidLabel(k){const s=schoolOf(k.school);return k.name||(k.example?(lang==="ar"?"مثال":"Example"):t().child)}
+function renderKids(){
+  const list=kidList();
+  let h=list.map((k,i)=>{const s=schoolOf(k.school);const init=(k.name||"").trim().charAt(0)||(k.gender==="b"?(lang==="ar"?"و":"B"):(lang==="ar"?"ب":"G"));
+    return `<button class="kid" data-kid="${i}" aria-pressed="${i===active}"><span class="av" aria-hidden="true">${esc(init)}</span><span class="t"><b>${esc(kidLabel(k))}</b><span>${esc(s.name.replace("International School of Choueifat","Choueifat"))} · ${t().yr(num(k.age))}</span></span></button>`}).join("");
+  h+=`<button class="add" data-add>+ ${kids.length?t().addKid:t().addFirst}</button>`;
+  document.getElementById("kids").innerHTML=h;
+}
+function renderForm(){
+  const host=document.getElementById("formHost");
+  if(editing===null){host.innerHTML=kids.length?"":`<p class="example">${t().example}</p>`;return}
+  const k=editing>=0?kids[editing]:{name:"",school:"",age:6,gender:"b"};
+  const em=(schoolOf(k.school||"gems-wellington")||{}).em||"dubai";
+  host.innerHTML=`<form class="card kidform" id="kidForm"><h2>${editing>=0?t().formTitleEdit:t().formTitleNew}</h2>
+   <div class="grid">
+    <div class="full"><label class="l" for="k-name">${t().name}</label><input class="input" id="k-name" maxlength="30" value="${esc(k.name)}" placeholder="${t().namePh}"></div>
+    <div><label class="l" for="k-em">${t().emirate}</label><select id="k-em">${Object.entries(EMIRATES).map(([v,n])=>`<option value="${v}"${v===em?" selected":""}>${n[L()]}</option>`).join("")}</select></div>
+    <div><label class="l" for="k-school">${t().school}</label><select id="k-school"></select></div>
+    <div><label class="l" for="k-age">${t().age}</label><select id="k-age">${Array.from({length:16},(_,i)=>i+3).map(a=>`<option value="${a}"${a===k.age?" selected":""}>${t().yr(num(a))} · ${t().stage[stageOf(a)]}</option>`).join("")}</select></div>
+    <div><span class="l">${t().gender}</span><div class="seg" role="radiogroup" aria-label="${t().gender}">
+      <label><input type="radio" name="k-g" id="k-gb" value="b"${k.gender!=="g"?" checked":""}><span>${t().boy}</span></label>
+      <label><input type="radio" name="k-g" id="k-gg" value="g"${k.gender==="g"?" checked":""}><span>${t().girl}</span></label></div></div>
+   </div>
+   <div class="row-btns"><button class="btn solid" type="submit">${t().save}</button><button class="btn" type="button" data-cancel-kid>${t().cancel}</button>${editing>=0?`<button class="btn ghost" type="button" data-remove-kid>${t().remove}</button>`:""}</div></form>`;
+  fillSchools(em,k.school);
+  document.getElementById("k-em").addEventListener("change",ev=>fillSchools(ev.target.value,null));
+}
+function fillSchools(em,sel){
+  const list=SCHOOLS.filter(s=>s.em===em);
+  document.getElementById("k-school").innerHTML=list.map(s=>`<option value="${s.id}"${s.id===sel?" selected":""}>${esc(s.name)}</option>`).join("");
+}
+
+function renderView(){
+  const k=curKid(),s=schoolOf(k.school),evs=eventsFor(k);
+  const up=evs.filter(e=>daysTo(e.date)>=0),nx=up[0];
+  const conf=evs.filter(e=>e.confirmed).length;
+  let h="";
+  if(nx){
+    const dd=daysTo(nx.date);
+    h+=`<section class="next" aria-label="${t().next}"><div class="a"><div class="eyebrow">${t().next} · ${esc(kidLabel(k))}</div><h2>${esc(nx.name[L()])}</h2>
+      <div class="fit">${esc(pick(nx,"wear",k.gender))} <b>${t().size(num(k.age))}</b>.</div>
+      <div class="acts"><a href="https://www.amazon.ae/s?k=${encodeURIComponent(query(nx,k))}" target="_blank" rel="noopener">${t().amazon}</a><a class="alt" href="https://www.noon.com/uae-en/search/?q=${encodeURIComponent(query(nx,k))}" target="_blank" rel="noopener">${t().noon}</a></div></div>
+      <div class="b">${dd===0?`<div class="big">${t().today}</div>`:dd===1?`<div class="big">${t().tomorrow}</div>`:`<div class="big">${num(dd)}</div><small>${t().daysLeft}</small>`}
+      <div class="dd">${fmt(parse(nx.date),{weekday:"long",day:"numeric",month:"long"})} · ${nx.confirmed?t().confirmed:(nx.fixed?t().official:t().expected)}</div></div></section>`;
+  }
+  h+=`<div class="meta"><h3>${esc(s.name)}</h3><span>${EMIRATES[s.em][L()]} · ${t().stage[stageOf(k.age)]} · ${k.gender==="b"?t().boy:t().girl}, ${t().yr(num(k.age))}</span></div>
+     <div class="meter" aria-hidden="true"><i style="width:${evs.length?Math.round(conf/evs.length*100):0}%"></i></div>
+     <div class="progress">${t().progress(num(conf),num(evs.length))}</div>`;
+  if(!up.length)h+=`<p class="note">${t().none}</p>`;
+  const groups={};evs.forEach(e=>{const key=e.date.slice(0,7);(groups[key]=groups[key]||[]).push(e)});
+  Object.keys(groups).sort().forEach(key=>{
+    const[y,m]=key.split("-").map(Number);
+    h+=`<section class="month"><h4>${fmt(new Date(y,m-1,1),{month:"long",year:"numeric"})}</h4><div class="list">`;
+    groups[key].forEach(e=>{
+      const dt=parse(e.date),dd=daysTo(e.date);
+      const badge=e.confirmed?`<span class="badge b-sure">${t().confirmed}</span>`:`<span class="badge b-guess">${e.fixed?t().official:t().expected}</span>`;
+      const hist=e.hist?`<div class="hist">${t().lastYear}: ${fmt(parse(e.hist.date),{day:"numeric",month:"long",year:"numeric"})}${e.hist.note&&lang==="ar"?" — "+esc(e.hist.note):""}${e.hist.source&&/^https:\/\//.test(e.hist.source)?` · <a href="${esc(e.hist.source)}" target="_blank" rel="noopener">${t().source}</a>`:""}</div>`:"";
+      const when=e.confirmed?((e.rnote&&lang==="ar")?esc(e.rnote):t().fromCirc):esc(e.exp[L()]);
+      h+=`<article class="ev${dd<0?" past":""}${nx&&e.id===nx.id?" is-next":""}">
+        <div class="date"><div class="d">${num(dt.getDate())}</div><div class="m">${fmt(dt,{month:"short"})}</div><div class="w">${fmt(dt,{weekday:"short"})}</div></div>
+        <div>
+          <div class="top"><h5>${esc(e.name[L()])}</h5>${badge}<span class="sw" aria-hidden="true">${e.sw.map(c=>`<i style="background:${c}"></i>`).join("")}</span></div>
+          <div class="when">${when}${dd>=0?` · ${t().inDays(num(dd))}`:""}${e.src&&/^https:\/\//.test(e.src)?` · <a href="${esc(e.src)}" target="_blank" rel="noopener">${t().source}</a>`:""}</div>
+          ${hist}
+          <div class="wear">${esc(pick(e,"wear",k.gender))}</div>
+          <div class="chips">${(e["buy"+(k.gender==="b"?"B":"G")]||e.buy)[L()].map(b=>`<span>${esc(b)}</span>`).join("")}<span>${t().size(num(k.age))}</span></div>
+          <div class="links">
+            <a href="https://www.amazon.ae/s?k=${encodeURIComponent(query(e,k))}" target="_blank" rel="noopener">${t().amazon}</a>
+            <a href="https://www.noon.com/uae-en/search/?q=${encodeURIComponent(query(e,k))}" target="_blank" rel="noopener">${t().noon}</a>
+            ${canWrite&&!k.example?`<button class="btn sm" data-open="${e.id}">${e.confirmed?t().editDate:t().haveDate}</button>`:""}
+            ${flash===e.id?`<span class="msg">${t().saved}</span>`:""}
+          </div>
+          ${openForm===e.id?`<form class="dform" data-form="${e.id}">
+            <div><label class="l" for="d-${e.id}">${t().dateLbl}</label><input class="input" type="date" id="d-${e.id}" required value="${e.date}" min="2026-08-31" max="2027-07-02"></div>
+            <div><label class="l" for="n-${e.id}">${t().noteLbl}</label><input class="input" id="n-${e.id}" maxlength="140" value="${esc(e.rnote)}" placeholder="${t().notePh}"></div>
+            <div class="full"><button class="btn solid sm" type="submit">${t().save}</button><button class="btn sm" type="button" data-cancel>${t().cancel}</button></div></form>`:""}
+        </div></article>`;
+    });
+    h+=`</div></section>`;
+  });
+  if(db&&!canWrite)h+=`<p class="note">${t().signin}</p>`;
+  document.getElementById("view").innerHTML=h;
+}
+function renderAll(){renderChrome();renderKids();renderForm();renderView()}
+
+document.querySelector(".lang").addEventListener("click",ev=>{const b=ev.target.closest("[data-lang]");if(!b)return;lang=b.dataset.lang;persist();renderAll()});
+document.getElementById("kids").addEventListener("click",ev=>{
+  const b=ev.target.closest("[data-kid]");
+  if(b){const i=+b.dataset.kid;if(i===active&&kids.length){editing=i}else{active=i;editing=null}persist();subscribe();renderAll();return}
+  if(ev.target.closest("[data-add]")){editing=-1;renderForm();const n=document.getElementById("k-name");if(n)n.focus()}
+});
+document.getElementById("formHost").addEventListener("click",ev=>{
+  if(ev.target.closest("[data-cancel-kid]")){editing=null;renderForm()}
+  if(ev.target.closest("[data-remove-kid]")){kids.splice(editing,1);active=0;editing=null;persist();subscribe();renderAll()}
+});
+document.getElementById("formHost").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  const k={name:document.getElementById("k-name").value.trim().slice(0,30),school:document.getElementById("k-school").value,age:+document.getElementById("k-age").value,gender:document.querySelector('input[name="k-g"]:checked').value};
+  if(editing>=0){kids[editing]=k;active=editing}else{kids.push(k);active=kids.length-1}
+  editing=null;persist();subscribe();renderAll();
+});
+document.getElementById("view").addEventListener("click",ev=>{
+  const o=ev.target.closest("[data-open]");if(o){openForm=o.dataset.open;flash=null;renderView();const i=document.getElementById("d-"+openForm);if(i)i.focus();return}
+  if(ev.target.closest("[data-cancel]")){openForm=null;renderView()}
+});
+document.getElementById("view").addEventListener("submit",async ev=>{
+  ev.preventDefault();const f=ev.target.closest("[data-form]");if(!f||!db)return;
+  const id=f.dataset.form,k=curKid();
+  const date=document.getElementById("d-"+id).value,note=document.getElementById("n-"+id).value.trim().slice(0,140);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+  try{await db.doc("reports/"+k.school+"__"+id).set({school:k.school,event:id,date,note,at:new Date().toISOString()});openForm=null;flash=id;renderView()}
+  catch(e){canWrite=false;openForm=null;renderView()}
+});
+function subscribe(){
+  const sid=curKid().school;
+  if(sid===subSchool)return;
+  subSchool=sid;reports={};history={};
+  if(unsubR){unsubR();unsubR=null}if(unsubH){unsubH();unsubH=null}
+  if(!db){STATIC.reports.filter(x=>x.school===sid).forEach(x=>reports[x.event]=x);STATIC.history.filter(x=>x.school===sid).forEach(x=>history[x.event]=x);return}
+  unsubR=db.collection("reports").where("school","==",sid).onSnapshot(snap=>{if(sid!==curKid().school)return;const r={};snap.docs.forEach(d=>{const x=d.data();if(x&&x.event)r[x.event]=x});reports=r;renderView()},()=>{});
+  unsubH=db.collection("history").where("school","==",sid).onSnapshot(snap=>{if(sid!==curKid().school)return;const r={};snap.docs.forEach(d=>{const x=d.data();if(x&&x.event)r[x.event]=x});history=r;renderView()},()=>{});
+}
+subscribe();renderAll();
+(async()=>{
+  if(!window.claude||!window.claude.use)return;
+  try{const [d,u]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!d)return;db=d;const cw=u&&u.can?await u.can("data.write"):null;canWrite=cw!==false;subSchool=null;subscribe();renderView();
+  }catch(e){}
+})();
+</script>
+
+</body>
+</html>
