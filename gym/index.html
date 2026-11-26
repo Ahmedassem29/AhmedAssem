@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Double AA</title>
+<meta name="theme-color" content="#070708">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Double AA">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Alexandria:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a fight-poster gym app — black, blood red, hard edges
+   IDEA: the gym wall graphics in Ahmed's own gym (PULL. LIFT. CONQUER.)
+   PICTURE: his real machines, graded dark; real start/finish photos
+   COLOUR+TYPE: near-black, white, one red; Anton + Alexandria 900
+   LAYOUT: full-bleed hero, stacked cards, sticky bottom nav */
+:root{--bg:#070708;--p:#111114;--p2:#18181d;--line:#25252c;--ink:#f4f4f6;--mut:#8b8b97;--red:#ff1f2d;--red2:#a3000c;--ok:#ff1f2d;
+--cut:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));color-scheme:dark}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Alexandria,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
+body{padding-bottom:calc(86px + env(safe-area-inset-bottom));background-image:radial-gradient(120% 60% at 50% -10%,#2a0005 0%,transparent 60%)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit}
+img{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.page{max-width:680px;margin:0 auto;padding:18px 16px 24px}
+.logo{display:inline-flex;flex-direction:column;align-items:flex-start;color:#fff;line-height:1;direction:ltr}
+.logo small{font-family:Anton;font-size:10px;letter-spacing:.42em;color:#fff;margin:0 0 2px 4px}
+.mark{width:64px;height:33px;display:block}
+.disp{font-family:Anton,Alexandria,sans-serif;font-weight:900;letter-spacing:.01em;line-height:1.02;text-transform:uppercase;margin:0}
+[lang=ar] .disp{font-family:Alexandria,Anton,sans-serif;font-weight:900;letter-spacing:0}
+.ttl{font-family:Anton,Alexandria;font-weight:900;font-size:40px;line-height:1.05;margin:calc(10px + env(safe-area-inset-top)) 0 6px;text-transform:uppercase}
+[lang=ar] .ttl{font-family:Alexandria;font-weight:900;font-size:34px}
+.sub{color:var(--mut);margin:0 0 10px;font-size:14px}
+.hint{color:var(--mut);font-size:13px;line-height:1.75;margin:8px 0 12px}
+.btn{display:block;width:100%;background:var(--red);color:#fff;font-weight:900;font-size:18px;padding:17px;margin-top:16px;clip-path:var(--cut);letter-spacing:.02em;text-transform:uppercase;box-shadow:0 10px 30px #ff1f2d33}
+.btn:active{transform:translateY(1px);background:var(--red2)}
+.btn.sm{padding:11px;font-size:15px;margin-top:12px}
+.btn.ghost{background:var(--p2);color:var(--ink);box-shadow:none;font-weight:700}
+.btn.danger{color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 4px;scrollbar-width:none}
+.chips.scroll::-webkit-scrollbar{display:none}
+.chips.scroll .chip{flex:none}
+.chip{background:var(--p);border:1px solid var(--line);padding:9px 16px;font-weight:700;font-size:15px;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff}
+.seg{display:flex;gap:6px}.seg .chip{flex:1;text-align:center;padding:12px 4px}
+/* intro */
+.intro{position:relative;min-height:72vh;display:flex;align-items:flex-end;overflow:hidden}
+.intro-bg,.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:grayscale(1) contrast(1.35) brightness(.55)}
+.intro::after,.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#07070855 0%,#0707088a 45%,var(--bg) 100%),linear-gradient(115deg,transparent 55%,#ff1f2d40 55.2%,transparent 70%);pointer-events:none}
+.intro::before,.hero::before{content:"";position:absolute;inset:0;background:#ff1f2d;mix-blend-mode:multiply;opacity:.45;z-index:1;pointer-events:none}
+.intro-in{position:relative;z-index:2;padding:calc(20px + env(safe-area-inset-top)) 20px 26px;width:100%;max-width:680px;margin:0 auto}
+.intro .logo{margin:40px 0 18px}.intro .logo small{font-size:19px;letter-spacing:.5em;margin-bottom:4px}.intro .mark{width:136px;height:70px}
+.intro h1{font-size:clamp(46px,14vw,78px)}
+.intro p{color:#d9d9de;font-size:17px;margin:10px 0 0;max-width:30ch}
+.langsw{display:flex;gap:6px;justify-content:flex-end}
+.intro .langsw{position:absolute;top:calc(16px + env(safe-area-inset-top));inset-inline-end:16px}
+.form .field{margin-top:22px}
+.field>label{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin-bottom:10px}
+.field>label i{font-style:normal;font-family:Anton;color:var(--red);font-size:22px}
+.opts.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.opt{background:var(--p);border:1.5px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;clip-path:var(--cut)}
+.opt b{font-size:16px;font-weight:900}.opt span{font-size:11.5px;color:var(--mut);line-height:1.4}
+.opt.on{border-color:var(--red);background:linear-gradient(160deg,#3a0007,#16070a)}
+.opt.on span{color:#ffb3b8}
+.disc{color:var(--mut);font-size:12px;line-height:1.7;text-align:center;margin-top:20px}
+/* hero */
+.hero{position:relative;min-height:330px;overflow:hidden;display:flex;align-items:flex-end}
+.hero-in{position:relative;z-index:2;width:100%;max-width:680px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 18px 18px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:46px}
+.wkc{font-size:13px;color:#ddd;background:#0009;padding:5px 12px;border:1px solid #ffffff22}
+.wkc b{color:var(--red);font-family:Anton;font-size:16px;letter-spacing:.03em}
+.dnum{display:flex;align-items:baseline;gap:10px;line-height:.9}
+.dnum span{font-family:Anton;color:var(--red);font-size:18px;letter-spacing:.12em;text-transform:uppercase}
+[lang=ar] .dnum span{font-family:Alexandria;font-weight:900;letter-spacing:0}
+.dnum b{font-family:Anton;font-size:86px;color:transparent;-webkit-text-stroke:2px #fff;line-height:.85}
+.hero h1{font-size:clamp(36px,11vw,58px);margin-top:4px}
+.dm{margin:4px 0 0;color:#cfcfd6;font-weight:500}
+.daypick{display:flex;gap:6px;margin-top:16px}
+.daypick button{font-family:Anton;font-size:18px;width:46px;height:42px;background:#000a;border:1px solid #ffffff2a;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.daypick .on{background:var(--red);border-color:var(--red)}
+.clock{font-family:Anton;font-size:40px;color:var(--red);margin-top:10px;letter-spacing:.04em}
+.warm{border-inline-start:3px solid var(--red);background:var(--p);padding:12px 14px;font-size:14px;line-height:1.75;color:#d5d5dc;margin-bottom:14px}
+/* exercise cards */
+.list{display:grid;gap:10px}
+.ex{background:var(--p);border:1px solid var(--line);position:relative}
+.ex.open{border-color:#4a0b12;background:#0f0f12}
+.ex.open::before{content:"";position:absolute;inset-block:0;inset-inline-start:-1px;width:3px;background:var(--red)}
+.ex.complete .thumb img{filter:grayscale(1) brightness(.35)}
+.ex header{display:flex;gap:12px;padding:10px;cursor:pointer;align-items:stretch}
+.thumb{position:relative;flex:none;width:84px;height:104px;overflow:hidden;background:#000}
+.thumb img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.25) brightness(.85)}
+.idx{position:absolute;inset-inline-start:0;bottom:0;background:var(--red);font-family:Anton;font-size:20px;padding:0 8px;line-height:1.5}
+.complete .idx{font-family:Alexandria;font-weight:900}
+.exh{flex:1;display:flex;flex-direction:column;justify-content:center}
+.exh h3{margin:0;font-size:18px;font-weight:900;line-height:1.3}
+.exh p{margin:0 0 8px;color:var(--mut);font-size:12px}
+.rx{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rx b{font-family:Anton;font-size:19px;letter-spacing:.03em;color:#fff;background:var(--red);padding:0 8px;line-height:1.45}
+.rx span{font-size:12px;color:#c8c8d0;border:1px solid var(--line);padding:1px 8px}
+.rx .prog{color:#fff;border-color:var(--red)}
+.body{padding:0 10px 14px}
+.media{margin-bottom:12px}
+.tabs{display:flex;gap:4px;margin-bottom:6px}
+.tabs button{flex:1;padding:9px 6px;background:var(--p2);font-weight:800;font-size:14px;color:var(--mut)}
+.tabs .on{background:#fff;color:#000}
+.gymshot{position:relative;background:#000}
+.gymshot img{width:100%;max-height:560px;object-fit:cover}
+.ts{position:absolute;bottom:10px;inset-inline-start:10px;background:var(--red);font-size:12px;padding:2px 10px;font-weight:800}
+.note-s{font-size:12px;color:var(--mut);margin:6px 0 0;line-height:1.6}
+.sug{background:var(--p2);border-inline-start:3px solid var(--mut);padding:9px 12px;font-size:14px;margin-bottom:10px}
+.sug.up{border-color:var(--red);background:#1d0709}
+.sug b{font-weight:900}
+.sets{background:#000;padding:8px;margin-bottom:12px;border:1px solid var(--line)}
+.sh,.srow{display:grid;grid-template-columns:40px minmax(0,1fr) minmax(0,1fr) 52px;gap:6px;align-items:center}
+.sh{font-size:11px;color:var(--mut);text-align:center;padding:0 0 6px;text-transform:uppercase}
+.srow{margin-bottom:6px}
+.sn{font-family:Anton;font-size:20px;color:var(--mut);text-align:center}
+.srow input{width:100%;height:50px;background:var(--p2);border:1px solid var(--line);color:#fff;text-align:center;font-size:22px;font-family:Anton;letter-spacing:.03em;border-radius:0}
+.srow input::placeholder{color:#4c4c56}
+.srow input:focus{border-color:var(--red);outline:0}
+.ck{height:50px;background:var(--p2);border:1px solid var(--line);display:grid;place-items:center}
+.ck svg{width:24px;height:24px;fill:none;stroke:#555;stroke-width:3;stroke-linecap:square}
+.srow.done .ck{background:var(--red);border-color:var(--red)}.srow.done .ck svg{stroke:#fff}
+.srow.done .sn{color:var(--red)}.srow.done input{color:#ff9aa1;border-color:#3a0c11}
+.sact{display:flex;gap:8px;justify-content:center;margin-top:4px}
+.mini{font-size:13px;color:var(--mut);border:1px solid var(--line);padding:5px 14px}
+.how h4{margin:14px 0 4px;font-size:13px;color:var(--red);text-transform:uppercase;letter-spacing:.06em;font-weight:900}
+.how ul,.how ol{margin:0;padding-inline-start:20px;line-height:1.85;font-size:15px;color:#dedee4}
+.how ol li::marker{color:var(--red);font-family:Anton}
+.how .tips li::marker{content:"▲  ";color:var(--red);font-size:10px}
+
+/* player: start -> end on a rep tempo */
+.player{position:relative;aspect-ratio:3/2;background:#000;overflow:hidden}
+.player img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kb 4.6s ease-in-out infinite}
+.player img.b{animation:rep 4.6s ease-in-out infinite,kb 4.6s ease-in-out infinite}
+@keyframes rep{0%,12%{opacity:0}30%,44%{opacity:1}80%,100%{opacity:0}}
+@keyframes kb{0%,100%{transform:scale(1.02)}37%{transform:scale(1.09) translateY(-1.5%)}}
+.player::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#000c);pointer-events:none}
+.cap{position:absolute;inset-inline:12px;bottom:16px;z-index:2;height:28px}
+.cap span{position:absolute;inset-inline-start:0;bottom:0;font-weight:900;font-size:15px;background:var(--red);padding:2px 10px;opacity:0}
+.cap .c1{animation:c1 4.6s infinite}.cap .c2{animation:c2 4.6s infinite;background:#fff;color:#000}
+@keyframes c1{0%,10%{opacity:0}12%,44%{opacity:1}46%,100%{opacity:0}}
+@keyframes c2{0%,44%{opacity:0}46%,80%{opacity:1}82%,100%{opacity:0}}
+.pos{position:absolute;top:10px;inset-inline-start:10px;display:flex;z-index:2}
+.pos b{font-size:12px;font-weight:900;padding:2px 9px;background:#000b}
+.pos .s{animation:ps 4.6s infinite}.pos .e{animation:pe 4.6s infinite}
+@keyframes ps{0%,20%,80%,100%{background:var(--red)}30%,70%{background:#000b}}
+@keyframes pe{0%,20%,80%,100%{background:#000b}30%,70%{background:var(--red)}}
+.bar{position:absolute;inset-inline:0;bottom:0;height:4px;background:#ffffff22;z-index:2}
+.bar i{display:block;height:100%;background:var(--red);animation:bar 4.6s linear infinite}
+@keyframes bar{from{width:0}to{width:100%}}
+.yt{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding:11px;background:var(--p2);border:1px solid var(--line);color:#fff;text-decoration:none;font-weight:800;font-size:14px}
+.yt svg{width:22px;height:22px;fill:#fff;background:var(--red);border-radius:5px}
+/* official photos */
+img.prod{background:#fff;object-fit:contain!important;filter:none!important;padding:4%}
+.thumb img.prod,.lim img.prod,.pi img.prod,.pr img.prod,.swapi img.prod{padding:6%}
+.thumb img,.lim img,.pi img,.pr img{filter:none!important}
+.offshot{position:relative;background:#000;aspect-ratio:16/10;overflow:hidden}.offshot.white{background:#fff;aspect-ratio:1/1;max-height:420px;margin:0 auto}
+.offshot img{width:100%;height:100%;object-fit:cover}
+.mdl{position:absolute;inset-inline-start:0;bottom:0;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:3px 10px;direction:ltr}
+.sublbl{font-size:12px;color:var(--mut);margin:10px 0 4px}
+.gymshot.small img{max-height:240px}
+/* video */
+.vbox{position:relative;aspect-ratio:16/10;background:#000;overflow:hidden;cursor:pointer;display:block;width:100%}
+.vbox img{width:100%;height:100%;object-fit:cover;filter:brightness(.55) contrast(1.1)}
+.vbox .play{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);width:74px;height:74px;background:var(--red);display:grid;place-items:center;clip-path:var(--cut);box-shadow:0 0 0 6px #ff1f2d44}
+.vbox .play svg{width:34px;height:34px;fill:#fff}
+.vmeta{position:absolute;inset-inline:0;bottom:0;padding:12px;background:linear-gradient(transparent,#000e);text-align:start}
+.vmeta b{display:block;font-size:15px;font-weight:900;line-height:1.35;direction:ltr;text-align:left}
+.vmeta span{font-size:12px;color:#c9c9d0}.vmeta i{font-style:normal;color:#fff;background:var(--red);padding:0 6px;font-weight:800}
+.vframe{position:relative;aspect-ratio:16/9;background:#000}.vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vlink{display:block;text-align:end;font-size:12.5px;color:var(--mut);padding:6px 2px 0;text-decoration:none}
+/* muscle map */
+.mmap{display:grid;grid-template-columns:1fr;gap:12px;background:#000;border:1px solid var(--line);padding:12px}
+.figs{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:360px;margin:0 auto;width:100%}
+.figs figure{margin:0;text-align:center}.figs figcaption{font-size:11px;color:var(--mut)}
+.bfig{width:100%;height:auto;max-height:300px}
+.bfig .sil *{fill:#1b1b21}
+.bfig .m0{fill:#2a2a31}.bfig .m1{fill:var(--red);filter:drop-shadow(0 0 4px #ff1f2d99)}.bfig .m2{fill:#7a1119}
+.mlist h4{margin:0 0 8px;font-size:13px;color:var(--red);font-weight:900;text-transform:uppercase}
+.mlist div{display:flex;flex-wrap:wrap;gap:5px}
+.mlist span{font-size:12.5px;font-weight:800;padding:2px 8px}
+.mlist .p1{background:var(--red)}.mlist .p2{background:#4a0a10;color:#ffc2c7}
+.leg{font-size:11px;color:var(--mut);margin:10px 0 0;display:flex;align-items:center;gap:5px}
+.leg i{display:inline-block;width:10px;height:10px}.leg i.p1{background:var(--red)}.leg i.p2{background:#7a1119;margin-inline-start:6px}
+/* profiles */
+.pbar{display:flex;gap:6px;margin:-30px 0 18px;flex-wrap:wrap}
+.pbar button,.plist button{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:#000a;border:1px solid #ffffff2a;font-weight:800;font-size:14px}
+[dir=rtl] .pbar button,[dir=rtl] .plist button{padding:5px 5px 5px 12px}
+.pbar span,.plist span{width:26px;height:26px;display:grid;place-items:center;background:#333;font-family:Alexandria;font-weight:900}
+.pbar .on,.plist .on{border-color:var(--red)}.pbar .on span,.plist .on span{background:var(--red)}
+.page>.pbar{margin:calc(10px + env(safe-area-inset-top)) 0 0}
+.plist{display:flex;flex-wrap:wrap;gap:6px}.plist button{background:var(--p)}
+.padd{border:1px dashed var(--mut)!important;color:var(--mut);padding:8px 14px!important}
+.tin{width:100%;height:52px;background:var(--p);border:1px solid var(--line);color:#fff;font-size:18px;font-weight:700;padding:0 14px;border-radius:0}
+.tin:focus{border-color:var(--red);outline:0}
+/* body weight */
+.bw{background:var(--p);border:1px solid var(--line);padding:12px}
+.bwnow{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+.bwnow b{font-family:Anton;font-size:42px;line-height:1}.bwnow b small{font-size:16px;color:var(--mut);margin-inline-start:3px}
+.bwnow span{color:var(--mut);font-size:13px}.bwnow em{font-style:normal;background:var(--red);font-weight:900;font-size:13px;padding:2px 10px}
+.bwline{width:100%;height:60px;margin:8px 0}.bwline polyline{fill:none;stroke:var(--red);stroke-width:2;vector-effect:non-scaling-stroke}
+.bwin{display:flex;gap:8px;align-items:stretch}.bwin .btn{width:auto;margin:0;padding:0 22px}
+@media (prefers-reduced-motion:reduce){.player img,.player img.b,.cap span,.bar i,.pos b{animation:none}.player img.b{opacity:0}.cap .c1{opacity:1}}
+/* rest */
+#rest{display:none}
+#rest.show{display:flex;position:fixed;inset-inline:12px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:25;background:#120305;border:1px solid var(--red);padding:10px 12px;align-items:center;gap:12px;box-shadow:0 12px 40px #000c,0 0 0 4px #ff1f2d1a;max-width:656px;margin:0 auto}
+.ring{width:48px;height:48px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke:#2a0a0e;stroke-width:5}.ring .fg{stroke:var(--red);stroke-dasharray:119.4;transition:stroke-dashoffset .5s linear}
+.rl{flex:1;display:flex;flex-direction:column;line-height:1.1}.rl span{font-size:12px;color:var(--mut)}.rl b{font-family:Anton;font-size:30px;letter-spacing:.03em}
+#rest button{background:var(--p2);padding:10px 14px;font-weight:800}
+/* nav */
+.nav{position:fixed;bottom:0;inset-inline:0;display:flex;justify-content:space-around;background:#070708f2;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:4px 4px calc(6px + env(safe-area-inset-bottom));z-index:20}
+.nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;color:#6f6f7a;font-size:11px;font-weight:700;padding:8px 6px 2px;min-width:60px}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square}
+.nav .on{color:#fff}.nav .on::before{content:"";position:absolute;top:-5px;inset-inline:18px;height:3px;background:var(--red)}
+.nav .on svg{stroke:var(--red)}
+/* plan */
+.pday{background:var(--p);border:1px solid var(--line);padding:14px;margin-bottom:12px}
+.pday.next{border-color:var(--red);box-shadow:inset 0 0 0 1px #ff1f2d44}
+.pdh{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.pn{font-family:Anton;font-size:44px;color:transparent;-webkit-text-stroke:1.5px var(--red);line-height:1}
+.pdh h3{margin:0;font-size:20px;font-weight:900}.pdh p{margin:0;color:var(--mut);font-size:13px}
+.pdh>div{flex:1}
+.tag{background:var(--red);font-weight:900;font-size:12px;padding:3px 10px}
+.prow{display:grid;gap:6px}
+.pi{display:flex;gap:10px;align-items:center;background:#0b0b0d;padding:4px}
+.pi img{width:44px;height:54px;object-fit:cover;filter:grayscale(1) contrast(1.2)}
+.pi b{display:block;font-size:14px;font-weight:800;line-height:1.35}.pi span{font-family:Anton;color:var(--red);font-size:14px;letter-spacing:.03em}
+.note{border-inline-start:3px solid var(--red);background:var(--p);padding:12px 14px;font-size:14px;line-height:1.75;color:#d0d0d6}
+/* library */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lcard{background:var(--p);border:1px solid var(--line);text-align:start;display:flex;flex-direction:column;padding-bottom:10px}
+.lim{position:relative;aspect-ratio:4/5;overflow:hidden;background:#000;margin-bottom:8px}
+.lim img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.25) brightness(.8);transition:opacity .3s}
+.lim .lp{position:absolute;inset:auto 0 0 auto;inset-inline-end:6px;bottom:6px;width:46%;height:auto;aspect-ratio:3/2;border:2px solid var(--red);filter:none}
+.lcard b{font-size:14px;font-weight:900;padding:0 10px;line-height:1.35}.lcard span{font-size:12px;color:var(--mut);padding:0 10px}
+.back{color:var(--red);font-weight:900;padding:calc(10px + env(safe-area-inset-top)) 0 0}
+.alt{margin:20px 0 8px;font-weight:900}
+/* progress */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 4px}
+.stats div{background:var(--p);border:1px solid var(--line);padding:14px 8px;text-align:center}
+.stats b{display:block;font-family:Anton;font-size:38px;line-height:1;color:#fff}.stats small{font-size:18px;color:var(--mut)}
+.stats span{font-size:12px;color:var(--mut)}
+.stats div:first-child b{color:var(--red)}
+.sec{font-size:18px;font-weight:900;margin:24px 0 10px}
+.prs{display:grid;gap:6px}
+.pr{display:grid;grid-template-columns:40px minmax(0,1fr) 80px auto;gap:10px;align-items:center;background:var(--p);border:1px solid var(--line);padding:6px 10px 6px 6px;font-size:14px;font-weight:700}
+.pr img{width:40px;height:48px;object-fit:cover;filter:grayscale(1)}
+.pr b{font-family:Anton;font-size:22px;color:var(--red)}.pr small{font-size:12px;color:var(--mut);margin-inline-start:2px}
+.spark{width:80px;height:26px}.spark polyline{fill:none;stroke:var(--red);stroke-width:2.5}
+.logi{display:flex;justify-content:space-between;align-items:center;background:var(--p);border:1px solid var(--line);padding:10px 12px;margin-bottom:6px}
+.logi b{display:block;font-weight:900}.logi span{font-size:12.5px;color:var(--mut)}.logi em{font-style:normal;font-family:Anton;color:#ddd;font-size:16px;white-space:nowrap}
+.empty{color:var(--mut)}
+/* sheets */
+.sheet{position:fixed;inset:0;background:#000c;z-index:40;display:flex;align-items:flex-end}
+.sheet-in{background:var(--p);border-top:3px solid var(--red);width:100%;max-width:680px;margin:0 auto;max-height:86vh;overflow:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.sheet-in h3{margin:0 0 12px;font-weight:900;font-size:19px}
+.swapi{display:flex;gap:8px;align-items:center;width:100%;background:var(--p2);border:1.5px solid var(--line);padding:6px;margin-bottom:8px;text-align:start}
+.swapi.on{border-color:var(--red)}
+.swapi img{width:52px;height:64px;object-fit:cover}.swapi img+img{width:80px;height:64px}
+.swapi img:first-child{filter:grayscale(1)}
+.swapi b{display:block;font-weight:900;line-height:1.35}.swapi span{font-size:12px;color:var(--mut)}
+.dlg{align-items:center;padding:20px}.dlg .sheet-in{border:1px solid var(--red)}
+.dmsg{font-size:18px;font-weight:700;line-height:1.7;margin:4px 0 4px}
+.dbtns{display:flex;gap:8px}.dbtns .btn{flex:1}
+.toast{position:fixed;top:calc(14px + env(safe-area-inset-top));inset-inline:14px;background:var(--red);color:#fff;font-weight:900;text-align:center;padding:14px;z-index:50;clip-path:var(--cut);animation:tin .35s}
+@keyframes tin{from{transform:translateY(-24px);opacity:0}}
+
+@media (min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{min-height:380px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const EX=[{"id":"chest_press","name":"تشيست برس جهاز","en":"Matrix Ultra Converging Chest Press","group":"chest","slot":"chest_h","type":"machine","seen":"0:40","compound":true,"lvl":0,"avoid":[],"setup":["ظبّط الكرسي بحيث المقابض تبقى في مستوى منتصف صدرك.","ضهرك كله لازق في المسند، ورجلك ثابتة على الأرض."],"how":["ادفع المقابض لقدام لحد ما دراعك تتفرد من غير ما تقفل الكوع.","ارجع ببطء (حوالي 2 ثانية) لحد ما تحس بشد خفيف في الصدر."],"tips":["كتفك لتحت ولورا طول الوقت، ماتطلعهوش ناحية ودنك.","طلّع النفس وانت بتدفع."],"enHow":["Load an appropriate weight onto the pins and adjust the seat for your height. The handles should be near the bottom or middle of the pectorals at the beginning of the motion.","Your chest and head should be up and your shoulder blades retracted. This will be your starting position.","Press the handles forward by extending through the elbow.","After a brief pause at the top, return the weight just above the start position, keeping tension on the muscles by not returning the weight to the stops until the set is complete."],"muscles":["chest"],"similar":false,"muscles2":["shoulders","triceps"],"yq":"Matrix Versa Converging Chest Press how to use","vid":{"id":"WHjKUg5-LUY","t":0,"title":"Ultra Series | Converging Chest Press","ch":"Matrix Fitness","dur":"0:38","official":true},"photo":"https://assets.jhtbrand.co/files/product/323e9e0156e491ca216b7354178d3a4c87d38676/","pkind":"p","model":"Matrix Ultra G7-S13 Converging Chest Press"},{"id":"vertical_chest_press","name":"تشيست برس بالبلِيتس","en":"Matrix Magnum Vertical Bench Press","group":"chest","slot":"chest_h","type":"plate","seen":"3:40","compound":true,"lvl":0,"avoid":[],"setup":["حط نفس الوزن على الناحيتين.","المقابض في مستوى منتصف الصدر، والضهر على المسند."],"how":["ادفع لقدام بالدراعين مع بعض.","ارجع ببطء لحد ما الكوع يبقى ورا جسمك بشوية."],"tips":["الجهاز ده بيسمحلك تشتغل بكل دراع لوحده لو حابب تصلّح فرق القوة.","ماتفردش الكوع لآخره بقوة."],"enHow":["Load an appropriate weight onto the pins and adjust the seat for your height. The handles should be near the bottom or middle of the pectorals at the beginning of the motion.","Your chest and head should be up and your shoulder blades retracted. This will be your starting position.","Press the handles forward by extending through the elbow.","After a brief pause at the top, return the weight just above the start position, keeping tension on the muscles by not returning the weight to the stops until the set is complete."],"muscles":["chest"],"similar":true,"muscles2":["shoulders","triceps"],"yq":"Matrix Magnum Vertical Chest Press how to use","vid":{"id":"Brj-gEtVXXg","t":0,"title":"Magnum Vertical Bench Press — How to Use","ch":"Matrix Fitness","dur":"0:51","official":true},"photo":"https://i.ytimg.com/vi/Brj-gEtVXXg/maxresdefault.jpg","pkind":"v","model":"Matrix Magnum Vertical Bench Press"},{"id":"incline_press","name":"إنكلاين برس جهاز","en":"Incline Press (plate-loaded)","group":"chest","slot":"chest_inc","type":"plate","seen":"3:44","compound":true,"lvl":0,"avoid":["shoulder"],"setup":["الكرسي بحيث المقابض تبقى عند أعلى الصدر.","ضهرك ورأسك على المسند المايل."],"how":["ادفع لفوق ولقدام في خط مايل.","انزل ببطء لحد ما إيدك توصل قريب من أعلى صدرك."],"tips":["ده بيركز على الجزء العلوي من الصدر.","خلي الكوع بزاوية حوالي 45 درجة من جسمك، مش مفرود للجنب."],"enHow":["Load an appropriate weight onto the pins and adjust the seat for your height. The handles should be near the top of the pectorals at the beginning of the motion. Your chest and head should be up and your shoulder blades retracted. This will be your starting position.","Press the handles forward by extending through the elbow.","After a brief pause at the top, return the weight just above the start position, keeping tension on the muscles by not returning the weight to the stops until the set is complete."],"muscles":["chest"],"similar":false,"muscles2":["shoulders","triceps"],"yq":"Matrix Magnum Incline Press how to use","vid":{"id":"F1HgGsrf5tQ","t":0,"title":"Matrix Incline Chest Press Machine","ch":"Arman Eckelbarger","dur":"0:54","official":false},"photo":"https://i.ytimg.com/vi/F1HgGsrf5tQ/hqdefault.jpg","pkind":"v"},{"id":"decline_press","name":"ديكلاين برس جهاز","en":"Decline Press (plate-loaded)","group":"chest","slot":"chest_h","type":"plate","seen":"4:00","compound":true,"lvl":0,"avoid":[],"setup":["المقابض تبقى في مستوى أسفل الصدر.","ضهرك على المسند."],"how":["ادفع لقدام ولتحت شوية.","ارجع ببطء."],"tips":["بيركز على الجزء السفلي من الصدر، وبيكون أريح على الكتف من البنش العادي."],"enHow":["Load an appropriate weight onto the pins and adjust the seat for your height. The handles should be near the bottom of the pectorals at the beginning of the motion. Your chest and head should be up and your shoulder blades retracted. This will be your starting position.","Press the handles forward by extending through the elbow.","After a brief pause at the top, return the weight just above the start position, keeping tension on the muscles by not returning the weight to the stops until the set is complete."],"muscles":["chest"],"similar":false,"muscles2":["shoulders","triceps"],"yq":"Matrix Magnum Decline Press how to use"},{"id":"bench_press","name":"بنش برس بالبار","en":"Barbell Bench Press","group":"chest","slot":"chest_h","type":"free","seen":"5:48","compound":true,"lvl":1,"avoid":["shoulder"],"setup":["نام على البنش وعينك تحت البار بالظبط.","امسك البار أعرض من كتفك بشوية، ورجلك ثابتة على الأرض.","ابدأ بوزن خفيف، ويفضل حد يسبّتك (يقف وراك)."],"how":["نزّل البار ببطء لحد ما يلمس منتصف صدرك.","ادفعه لفوق في خط مستقيم."],"tips":["ضم لوحي الكتف لورا، وخلي فيه تقويسة خفيفة في أسفل الضهر.","ماتخبطش البار في صدرك."],"enHow":["Lie back on a flat bench. Using a medium width grip (a grip that creates a 90-degree angle in the middle of the movement between the forearms and the upper arms), lift the bar from the rack and hold it straight over you with your arms locked. This will be your starting position.","From the starting position, breathe in and begin coming down slowly until the bar touches your middle chest.","After a brief pause, push the bar back to the starting position as you breathe out. Focus on pushing the bar using your chest muscles. Lock your arms and squeeze your chest in the contracted position at the top of the motion, hold for a second and then start coming down slowly again. Tip: Ideally, lowering the weight should take about twice as long as raising it.","Repeat the movement for the prescribed amount of repetitions.","When you are done, place the bar back in the rack."],"muscles":["chest"],"similar":false,"muscles2":["shoulders","triceps"],"yq":"Barbell Bench Press how to use","vid":{"id":"lWFknlOTbyM","t":61,"title":"Barbell Bench Press — 2 Minute Tutorial","ch":"Max Euceda","dur":"2:00","official":false},"photo":"https://i.ytimg.com/vi/lWFknlOTbyM/hqdefault.jpg","pkind":"v"},{"id":"incline_db","name":"إنكلاين دمبل برس","en":"Incline Dumbbell Press","group":"chest","slot":"chest_inc","type":"free","seen":"6:16","compound":true,"lvl":1,"avoid":["shoulder"],"setup":["ظبّط البنش على زاوية 30 لـ 45 درجة.","اقعد والدمبلز على رجلك، وبعدين نام بيهم لورا."],"how":["ادفع الدمبلز لفوق لحد ما يقربوا من بعض.","انزل ببطء لحد ما الدمبل يبقى جنب صدرك."],"tips":["ماتخبطش الدمبلز في بعض فوق.","الكوع بزاوية 45 درجة من جسمك."],"enHow":["Lie back on an incline bench with a dumbbell in each hand atop your thighs. The palms of your hands will be facing each other.","Then, using your thighs to help push the dumbbells up, lift the dumbbells one at a time so that you can hold them at shoulder width.","Once you have the dumbbells raised to shoulder width, rotate your wrists forward so that the palms of your hands are facing away from you. This will be your starting position.","Be sure to keep full control of the dumbbells at all times. Then breathe out and push the dumbbells up with your chest.","Lock your arms at the top, hold for a second, and then start slowly lowering the weight. Tip Ideally, lowering the weights should take about twice as long as raising them.","Repeat the movement for the prescribed amount of repetitions.","When you are done, place the dumbbells back on your thighs and then on the floor. This is the safest manner to release the dumbbells."],"muscles":["chest"],"similar":false,"muscles2":["shoulders","triceps"],"yq":"Incline Dumbbell Press how to use","vid":{"id":"IP4oeKh1Sd4","t":57,"title":"Incline Dumbbell Bench Press — 2 Minute Tutorial","ch":"Max Euceda","dur":"2:00","official":false},"photo":"https://i.ytimg.com/vi/IP4oeKh1Sd4/hqdefault.jpg","pkind":"v"},{"id":"pec_fly","name":"بيك فلاي (فراشة)","en":"Matrix Ultra Pec Fly / Rear Delt","group":"chest","slot":"chest_fly","type":"machine","seen":"0:56","compound":false,"lvl":0,"avoid":[],"setup":["الكرسي بحيث المقابض في مستوى صدرك.","اختار وضع المقابض الخاص بالصدر (للأمام)."],"how":["ضم دراعاتك قدامك في شكل حضن، والكوع منحني شوية.","ارجع ببطء لحد ما تحس بفتح في الصدر."],"tips":["ماترجعش أبعد من مستوى كتفك.","اعصر الصدر ثانية لما الإيدين يقربوا من بعض."],"enHow":["Sit on the machine with your back flat on the pad.","Take hold of the handles. Tip: Your upper arms should be positioned parallel to the floor; adjust the machine accordingly. This will be your starting position.","Push the handles together slowly as you squeeze your chest in the middle. Breathe out during this part of the motion and hold the contraction for a second.","Return back to the starting position slowly as you inhale until your chest muscles are fully stretched.","Repeat for the recommended amount of repetitions."],"muscles":["chest"],"similar":false,"muscles2":[],"yq":"Matrix Versa Pec Fly Rear Delt how to use","vid":{"id":"xWEtTqJxRbk","t":0,"title":"Ultra Series | Pec Fly / Rear Delt","ch":"Matrix Fitness","dur":"1:04","official":true},"photo":"https://assets.jhtbrand.co/files/product/9d5891d4b3fe860ca0e5cc8294ce5772779b348a/","pkind":"p","model":"Matrix Ultra G7-S22 Pec Fly / Rear Delt"},{"id":"cable_fly","name":"كابل كروس أوفر","en":"Cable Crossover","group":"chest","slot":"chest_fly","type":"cable","seen":"4:32","compound":false,"lvl":1,"avoid":[],"setup":["حط البكرتين فوق، وامسك مقبض في كل إيد.","خطوة لقدام، ورجل قدام التانية للتوازن."],"how":["انزل بإيديك لقدام ولتحت لحد ما يتقابلوا قدام بطنك.","ارجع ببطء لحد ما تحس بفتح في الصدر."],"tips":["الكوع ثابت ومنحني شوية طول الحركة.","ماتميلش بجسمك كتير لقدام."],"enHow":["To get yourself into the starting position, place the pulleys on a high position (above your head), select the resistance to be used and hold the pulleys in each hand.","Step forward in front of an imaginary straight line between both pulleys while pulling your arms together in front of you. Your torso should have a small forward bend from the waist. This will be your starting position.","With a slight bend on your elbows in order to prevent stress at the biceps tendon, extend your arms to the side (straight out at both sides) in a wide arc until you feel a stretch on your chest. Breathe in as you perform this portion of the movement. Tip: Keep in mind that throughout the movement, the arms and torso should remain stationary; the movement should only occur at the shoulder joint.","Return your arms back to the starting position as you breathe out. Make sure to use the same arc of motion used to lower the weights.","Hold for a second at the starting position and repeat the movement for the prescribed amount of repetitions."],"muscles":["chest"],"similar":false,"muscles2":["shoulders"],"yq":"cable crossover how to use","vid":{"id":"taI4XduLpTk","t":0,"title":"How to Do Cable Crossovers","ch":"LIVESTRONG","dur":"1:27","official":false},"photo":"https://i.ytimg.com/vi/taI4XduLpTk/hqdefault.jpg","pkind":"v"},{"id":"lat_pulldown","name":"لات بول داون","en":"Matrix Ultra Diverging Lat Pulldown","group":"back","slot":"back_v","type":"cable","seen":"0:32","compound":true,"lvl":0,"avoid":[],"setup":["ظبّط مسند الركبة بحيث رجلك تثبت تحته.","امسك البار أعرض من كتفك."],"how":["اسحب البار لتحت لحد أعلى صدرك، وانت مايل لورا شوية خفيفة.","اطلع ببطء لحد ما دراعك يتفرد."],"tips":["فكّر إنك بتسحب بالكوع مش بالإيد.","ماترجعش بجسمك لورا كتير، وماتسحبش ورا رقبتك."],"enHow":["Sit down on a pull-down machine with a wide bar attached to the top pulley. Make sure that you adjust the knee pad of the machine to fit your height. These pads will prevent your body from being raised by the resistance attached to the bar.","Grab the bar with the palms facing forward using the prescribed grip. Note on grips: For a wide grip, your hands need to be spaced out at a distance wider than shoulder width. For a medium grip, your hands need to be spaced out at a distance equal to your shoulder width and for a close grip at a distance smaller than your shoulder width.","As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.","As you breathe out, bring the bar down until it touches your upper chest by drawing the shoulders and the upper arms down and back. Tip: Concentrate on squeezing the back muscles once you reach the full contracted position. The upper torso should remain stationary and only the arms should move. The forearms should do no other work except for holding the bar; therefore do not try to pull down the bar using the forearms.","After a second at the contracted position squeezing your shoulder blades together, slowly raise the bar back to the starting position when your arms are fully extended and the lats are fully stretched. Inhale during this portion of the movement.","Repeat this motion for the prescribed amount of repetitions."],"muscles":["lats"],"similar":false,"muscles2":["biceps","middle back","shoulders"],"yq":"Matrix Versa Lat Pulldown how to use","vid":{"id":"uoFjFcLIQec","t":0,"title":"Ultra Series | Diverging Lat Pulldown","ch":"Matrix Fitness","dur":"0:43","official":true},"photo":"https://assets.jhtbrand.co/files/product/e74ad7913759f0a6141d9629e704fc7af149d391/","pkind":"p","model":"Matrix Ultra G7-S33 Diverging Lat Pulldown"},{"id":"assisted_pullup","name":"عقلة بالمساعدة","en":"Matrix Chin / Dip Assist","group":"back","slot":"back_v","type":"machine","seen":"7:48","compound":true,"lvl":0,"avoid":["shoulder"],"setup":["اختار وزن المساعدة: كل ما الوزن يزيد، كل ما الجهاز يساعدك أكتر.","اركع على المسند وامسك المقابض اللي فوق."],"how":["اسحب جسمك لفوق لحد ما دقنك تعدّي المقابض.","انزل ببطء لحد ما دراعك يتفرد."],"tips":["كل ما تقوى، قلّل وزن المساعدة.","ماتتمرجحش."],"enHow":["Choke the band around the center of the pullup bar. You can use different bands to provide varying levels of assistance.","Pull the end of the band down, and place one bent knee into the loop, ensuring it won't slip out. Take a medium to wide grip on the bar. This will be your starting position.","Pull yourself upward by contracting the lats as you flex the elbow. The elbow should be driven to your side. Pull to the front, attempting to get your chin over the bar. Avoid swinging or jerking movements.","After a brief pause, return to the starting position."],"muscles":["lats"],"similar":true,"muscles2":["abdominals","forearms","middle back"],"yq":"Matrix assisted chin up machine how to use","vid":{"id":"CCPFFukj7ss","t":0,"title":"Matrix Versa Chin / Dip Assist — Setup & Movements","ch":"Matrix Fitness","dur":"0:48","official":true},"photo":"https://assets.jhtbrand.co/files/product/2d3dfb6fb46aff91554a6d178fcaa6c12d1e85ce/","pkind":"p","model":"Matrix Chin / Dip Assist"},{"id":"iso_high_row","name":"هاي رو هامر سترينث","en":"Hammer Strength Iso-Lateral High Row","group":"back","slot":"back_v","type":"plate","seen":"7:00","compound":true,"lvl":0,"avoid":[],"setup":["ظبّط الكرسي بحيث صدرك على المسند والمقابض فوق قدامك.","رجلك تحت المسند."],"how":["اسحب المقابض لتحت ولورا ناحية صدرك.","ارجع ببطء لحد ما تحس بفرد في الضهر."],"tips":["تقدر تشتغل بدراع واحد كل مرة.","ضم لوحي الكتف في آخر الحركة."],"enHow":["Load an appropriate weight onto the pins and adjust the seat height so that you can just reach the handles above you. Adjust the knee pad to help keep you down. Grasp the handles with a pronated grip. This will be your starting position.","Pull the handles towards your torso, retracting your shoulder blades as you flex the elbow.","Pause at the bottom of the motion, and then slowly return the handles to the starting position.","For multiple repetitions, avoid completely returning the weight to the stops to keep tension on the muscles being worked."],"muscles":["middle back"],"similar":true,"muscles2":["lats"],"yq":"Hammer Strength Iso-Lateral High Row how to use","vid":{"id":"5vcDfRwVMSk","t":0,"title":"Hammer Strength Iso-Lateral High Row","ch":"Life Fitness / Hammer Strength","dur":"0:34","official":true},"photo":"https://i.ytimg.com/vi/5vcDfRwVMSk/maxresdefault.jpg","pkind":"v","model":"Hammer Strength Iso-Lateral High Row"},{"id":"seated_row","name":"سيتد رو جهاز","en":"Matrix Ultra Diverging Seated Row","group":"back","slot":"back_h","type":"machine","seen":"0:24","compound":true,"lvl":0,"avoid":[],"setup":["ظبّط مسند الصدر بحيث إيدك بالكاد توصل للمقابض ودراعك مفرود.","صدرك لازق في المسند."],"how":["اسحب المقابض لورا ناحية بطنك، والكوع قريب من جسمك.","ارجع ببطء لحد ما دراعك يتفرد."],"tips":["ضم لوحي الكتف لورا في آخر الحركة.","ماتبعدش صدرك عن المسند."],"enHow":["Load an appropriate weight onto the pins and adjust the seat height so that the handles are at chest level. Grasp the handles with either a neutral or pronated grip. This will be your starting position.","Pull the handles towards your torso, retracting your shoulder blades as you flex the elbow.","Pause at the bottom of the motion, and then slowly return the handles to the starting position. For multiple repetitions, avoid completely returning the weight to the stops to keep tension on the muscles being worked."],"muscles":["lats"],"similar":false,"muscles2":["biceps","middle back"],"yq":"Matrix Versa Seated Row how to use","vid":{"id":"O90lC5WcIGE","t":0,"title":"Ultra Series | Diverging Seated Row","ch":"Matrix Fitness","dur":"0:36","official":true},"photo":"https://assets.jhtbrand.co/files/product/388229737c02e4a675585fd2f38a4550d302ba7e/","pkind":"p","model":"Matrix Ultra G7-S34 Diverging Seated Row"},{"id":"cable_row","name":"لو رو كابل","en":"Cable Low Row","group":"back","slot":"back_h","type":"cable","seen":"1:16","compound":true,"lvl":0,"avoid":["lowerback"],"setup":["اقعد ورجلك على المسند والركبة منحنية شوية.","امسك المقبض وضهرك مفرود."],"how":["اسحب المقبض لبطنك، وضهرك ثابت.","ارجع ببطء لحد ما دراعك يتفرد."],"tips":["ماتتمرجحش بضهرك لقدام ولورا.","صدرك لفوق طول الوقت."],"enHow":["For this exercise you will need access to a low pulley row machine with a V-bar. Note: The V-bar will enable you to have a neutral grip where the palms of your hands face each other. To get into the starting position, first sit down on the machine and place your feet on the front platform or crossbar provided making sure that your knees are slightly bent and not locked.","Lean over as you keep the natural alignment of your back and grab the V-bar handles.","With your arms extended pull back until your torso is at a 90-degree angle from your legs. Your back should be slightly arched and your chest should be sticking out. You should be feeling a nice stretch on your lats as you hold the bar in front of you. This is the starting position of the exercise.","Keeping the torso stationary, pull the handles back towards your torso while keeping the arms close to it until you touch the abdominals. Breathe out as you perform that movement. At that point you should be squeezing your back muscles hard. Hold that contraction for a second and slowly go back to the original position while breathing in.","Repeat for the recommended amount of repetitions."],"muscles":["middle back"],"similar":false,"muscles2":["biceps","lats","shoulders"],"yq":"seated cable row how to use","vid":{"id":"vwHG9Jfu4sw","t":47,"title":"Seated Cable Row — 2 Minute Tutorial","ch":"Max Euceda","dur":"2:00","official":false},"photo":"https://i.ytimg.com/vi/vwHG9Jfu4sw/hqdefault.jpg","pkind":"v"},{"id":"tbar_row","name":"تي بار رو","en":"Chest-Supported T-Bar Row","group":"back","slot":"back_h","type":"plate","seen":"5:20","compound":true,"lvl":0,"avoid":[],"setup":["اقف على المسند وصدرك على الوسادة.","امسك المقابض ودراعك مفرود."],"how":["اسحب لفوق ناحية صدرك، والكوع لورا.","انزل ببطء."],"tips":["صدرك لازق في الوسادة طول الوقت، وده بيحمي ضهرك.","جرّب المسكة الواسعة مرة والضيقة مرة."],"enHow":["Load up the T-bar Row Machine with the desired weight and adjust the leg height so that your upper chest is at the top of the pad. Tip: In some machines all you can do is stand on the appropriate step that allows you to be at a height that has the upper chest at the top of the pad.","Lay face down on the pad and grab the handles. You can either use a palms down, palms up, or palms in position depending on what part of your back you want to emphasize.","Lift the bar off the rack and extend your arms in front of you. This will be your starting position.","As you exhale slowly pull the weight up and squeeze your back at the top of the movement. Tip: Keep the upper arms as close to the torso as possible throughout the movement in order to better engage the back muscles. Also, do not lift your body off of the pad at any time and refrain from using the biceps to lift the weight.","After a second contraction at the top of the movement, as you inhale, slowly go back down to the starting position.","Repeat for the recommended amount of repetitions."],"muscles":["middle back"],"similar":true,"muscles2":["biceps","lats"],"yq":"chest supported T-bar row machine how to use","vid":{"id":"CRpez9nWVH0","t":0,"title":"Chest Supported T-Bar Row Tutorial","ch":"Prep Coach UK","dur":"0:34","official":false},"photo":"https://i.ytimg.com/vi/CRpez9nWVH0/hqdefault.jpg","pkind":"v"},{"id":"db_row","name":"وان آرم دمبل رو","en":"One-Arm Dumbbell Row","group":"back","slot":"back_h","type":"free","seen":"6:16","compound":true,"lvl":0,"avoid":[],"setup":["حط ركبة وإيد على البنش، والرجل التانية على الأرض.","ضهرك مفرود وموازي للأرض تقريبًا."],"how":["اسحب الدمبل ناحية وسطك، والكوع قريب من جسمك.","انزل ببطء لحد ما دراعك يتفرد."],"tips":["ماتلفّش جسمك وانت بتسحب.","خلّص كل العدّات بدراع، وبعدين بدّل."],"enHow":["Choose a flat bench and place a dumbbell on each side of it.","Place the right leg on top of the end of the bench, bend your torso forward from the waist until your upper body is parallel to the floor, and place your right hand on the other end of the bench for support.","Use the left hand to pick up the dumbbell on the floor and hold the weight while keeping your lower back straight. The palm of the hand should be facing your torso. This will be your starting position.","Pull the resistance straight up to the side of your chest, keeping your upper arm close to your side and keeping the torso stationary. Breathe out as you perform this step. Tip: Concentrate on squeezing the back muscles once you reach the full contracted position. Also, make sure that the force is performed with the back muscles and not the arms. Finally, the upper torso should remain stationary and only the arms should move. The forearms should do no other work except for holding the dumbbell; therefore do not try to pull the dumbbell up using the forearms.","Lower the resistance straight down to the starting position. Breathe in as you perform this step.","Repeat the movement for the specified amount of repetitions.","Switch sides and repeat again with the other arm."],"muscles":["middle back"],"similar":false,"muscles2":["biceps","lats","shoulders"],"yq":"One-Arm Dumbbell Row how to use","vid":{"id":"dFzUjzfih7k","t":0,"title":"Single Arm Dumbbell Row — 2 Minute Tutorial","ch":"Max Euceda","dur":"2:00","official":false},"photo":"https://i.ytimg.com/vi/dFzUjzfih7k/hqdefault.jpg","pkind":"v"},{"id":"back_ext","name":"باك إكستنشن 45°","en":"Matrix Magnum Back Extension","group":"back","slot":"hinge","type":"body","seen":"7:16","compound":false,"lvl":0,"avoid":["lowerback"],"setup":["ظبّط الوسادة بحيث حافتها تحت عضمة الحوض.","رجلك ثابتة تحت المسند."],"how":["انزل بجسمك لقدام وضهرك مفرود.","اطلع لحد ما جسمك يبقى خط مستقيم مع رجلك، مش أكتر."],"tips":["ماتقوّسش ضهرك لورا في الآخر.","لو بقت سهلة، امسك طارة على صدرك."],"enHow":["Lie face down on a hyperextension bench, tucking your ankles securely under the footpads.","Adjust the upper pad if possible so your upper thighs lie flat across the wide pad, leaving enough room for you to bend at the waist without any restriction.","With your body straight, cross your arms in front of you (my preference) or behind your head. This will be your starting position. Tip: You can also hold a weight plate for extra resistance in front of you under your crossed arms.","Start bending forward slowly at the waist as far as you can while keeping your back flat. Inhale as you perform this movement. Keep moving forward until you feel a nice stretch on the hamstrings and you can no longer keep going without a rounding of the back. Tip: Never round the back as you perform this exercise. Also, some people can go farther than others. The key thing is that you go as far as your body allows you to without rounding the back.","Slowly raise your torso back to the initial position as you inhale. Tip: Avoid the temptation to arch your back past a straight line. Also, do not swing the torso at any time in order to protect the back from injury.","Repeat for the recommended amount of repetitions."],"muscles":["lower back"],"similar":false,"muscles2":["glutes","hamstrings"],"yq":"45 degree back extension how to use","vid":{"id":"G6HG5VzJoNc","t":0,"title":"How to Perform a 45° Back Extension","ch":"Alexandra Yaeger","dur":"1:15","official":false},"photo":"https://assets.jhtbrand.co/files/product/318ab8fc7f88c1a97e326d0cf8a0cbecc5e28e92/","pkind":"p","model":"Matrix Magnum MG-A52 Back Extension"},{"id":"shoulder_press","name":"شولدر برس جهاز","en":"Matrix Ultra Converging Shoulder Press","group":"shoulders","slot":"sh_press","type":"machine","seen":"1:05","compound":true,"lvl":0,"avoid":["shoulder"],"setup":["ظبّط الكرسي بحيث المقابض تبقى في مستوى كتفك.","ضهرك على المسند."],"how":["ادفع لفوق لحد ما دراعك يتفرد تقريبًا.","انزل ببطء لمستوى الكتف."],"tips":["ماتقوّسش ضهرك.","ماتقفلش الكوع فوق."],"enHow":["Load an appropriate weight onto the pins and adjust the seat for your height. The handles should be near the top of the shoulders at the beginning of the motion. Your chest and head should be up and handles held with a pronated grip. This will be your starting position.","Press the handles upward by extending through the elbow.","After a brief pause at the top, return the weight to just above the start position, keeping tension on the muscles by not returning the weight to the stops until the set is complete."],"muscles":["shoulders"],"similar":false,"muscles2":["triceps"],"yq":"Matrix Versa Converging Shoulder Press how to use","vid":{"id":"zWVEKwAGdTc","t":0,"title":"Ultra Series | Converging Shoulder Press","ch":"Matrix Fitness","dur":"0:40","official":true},"photo":"https://assets.jhtbrand.co/files/product/bfc84f186e8d50e62ceb36869b62919ee94579ab/","pkind":"p","model":"Matrix Ultra G7-S23 Converging Shoulder Press"},{"id":"db_shoulder_press","name":"شولدر برس دمبل","en":"Seated Dumbbell Shoulder Press","group":"shoulders","slot":"sh_press","type":"free","seen":"6:16","compound":true,"lvl":1,"avoid":["shoulder"],"setup":["ظبّط البنش مستقيم (90 درجة).","ابدأ والدمبلز في مستوى كتفك."],"how":["ادفع لفوق لحد ما الدمبلز يقربوا من بعض.","انزل ببطء لمستوى الودن."],"tips":["ماتميلش لورا.","شد بطنك."],"enHow":["While holding a dumbbell in each hand, sit on a military press bench or utility bench that has back support. Place the dumbbells upright on top of your thighs.","Now raise the dumbbells to shoulder height one at a time using your thighs to help propel them up into position.","Make sure to rotate your wrists so that the palms of your hands are facing forward. This is your starting position.","Now, exhale and push the dumbbells upward until they touch at the top.","Then, after a brief pause at the top contracted position, slowly lower the weights back down to the starting position while inhaling.","Repeat for the recommended amount of repetitions."],"muscles":["shoulders"],"similar":false,"muscles2":["triceps"],"yq":"Seated Dumbbell Shoulder Press how to use","vid":{"id":"rO_iEImwHyo","t":41,"title":"Seated Dumbbell Shoulder Press — 2 Minute Tutorial","ch":"Max Euceda","dur":"2:00","official":false},"photo":"https://i.ytimg.com/vi/rO_iEImwHyo/hqdefault.jpg","pkind":"v"},{"id":"lateral_raise","name":"لاترال ريز جهاز","en":"Matrix Ultra Lateral Raise","group":"shoulders","slot":"sh_lat","type":"machine","seen":"1:00","compound":false,"lvl":0,"avoid":[],"setup":["ظبّط الكرسي بحيث مفصل الجهاز في نفس مستوى كتفك.","حط الوسادة على دراعك من بره."],"how":["ارفع دراعاتك للجنب لحد مستوى الكتف.","انزل ببطء."],"tips":["ماترفعش كتفك ناحية ودنك.","استخدم وزن خفيف وعدّات كتير."],"enHow":["Pick a couple of dumbbells and sit at the end of a flat bench with your feet firmly on the floor. Hold the dumbbells with your palms facing in and your arms straight down at your sides at arms' length. This will be your starting position.","While maintaining the torso stationary (no swinging), lift the dumbbells to your side with a slight bend on the elbow and the hands slightly tilted forward as if pouring water in a glass. Continue to go up until you arms are parallel to the floor. Exhale as you execute this movement and pause for a second at the top.","Lower the dumbbells back down slowly to the starting position as you inhale.","Repeat for the recommended amount of repetitions."],"muscles":["shoulders"],"similar":true,"muscles2":[],"yq":"Matrix Versa Lateral Raise how to use","vid":{"id":"7e_VVcPLgUo","t":0,"title":"Ultra Series | Lateral Raise","ch":"Matrix Fitness","dur":"0:35","official":true},"photo":"https://assets.jhtbrand.co/files/product/7704d5824a6b9afdf730d8b3d502d22ea1e47438/","pkind":"p","model":"Matrix Ultra G7-S21 Lateral Raise"},{"id":"rear_delt","name":"ريير ديلت (كتف خلفي)","en":"Matrix Ultra Pec Fly / Rear Delt","group":"shoulders","slot":"sh_rear","type":"machine","seen":"0:56","compound":false,"lvl":0,"avoid":[],"setup":["نفس جهاز البيك فلاي، بس اقعد ووشك ناحية المسند.","حط المقابض على الوضع الخلفي."],"how":["افتح دراعاتك للجنب ولورا ودراعك شبه مفرود.","ارجع ببطء."],"tips":["الحركة من الكتف، مش من الضهر.","وزن خفيف وتحكم كامل."],"enHow":["Adjust the handles so that they are fully to the rear. Make an appropriate weight selection and adjust the seat height so the handles are at shoulder level. Grasp the handles with your hands facing inwards. This will be your starting position.","In a semicircular motion, pull your hands out to your side and back, contracting your rear delts.","Keep your arms slightly bent throughout the movement, with all of the motion occurring at the shoulder joint.","Pause at the rear of the movement, and slowly return the weight to the starting position."],"muscles":["shoulders"],"similar":true,"muscles2":[],"yq":"Matrix Pec Fly Rear Delt machine rear delt how to use","vid":{"id":"xWEtTqJxRbk","t":0,"title":"Ultra Series | Pec Fly / Rear Delt","ch":"Matrix Fitness","dur":"1:04","official":true},"photo":"https://assets.jhtbrand.co/files/product/9d5891d4b3fe860ca0e5cc8294ce5772779b348a/","pkind":"p","model":"Matrix Ultra G7-S22 Pec Fly / Rear Delt"},{"id":"face_pull","name":"فيس بول كابل","en":"Cable Face Pull","group":"shoulders","slot":"sh_rear","type":"cable","seen":"4:32","compound":false,"lvl":0,"avoid":[],"setup":["حط البكرة في مستوى وشك، وركّب الحبل.","امسك الحبل وارجع خطوة لورا."],"how":["اسحب الحبل ناحية وشك، وافتح إيدك للجنب.","الكوع يبقى عالي في مستوى الكتف."],"tips":["ممتاز لصحة الكتف ووضع الجسم.","اثبت ثانية في آخر الحركة."],"enHow":["Facing a high pulley with a rope or dual handles attached, pull the weight directly towards your face, separating your hands as you do so. Keep your upper arms parallel to the ground."],"muscles":["shoulders"],"similar":false,"muscles2":["middle back"],"yq":"cable face pull how to use","vid":{"id":"eTCBSFlCJ_s","t":0,"title":"How to do a Face Pull","ch":"NASM","dur":"0:26","official":false},"photo":"https://i.ytimg.com/vi/eTCBSFlCJ_s/hqdefault.jpg","pkind":"v"},{"id":"biceps_machine","name":"باي جهاز","en":"Matrix Ultra Biceps Curl","group":"biceps","slot":"bi","type":"machine","seen":"3:02","compound":false,"lvl":0,"avoid":[],"setup":["ظبّط الكرسي بحيث دراعك كله على الوسادة، والكوع عند مفصل الجهاز."],"how":["اطوي دراعك لفوق ناحية كتفك.","انزل ببطء لحد ما دراعك يتفرد تقريبًا."],"tips":["ماترفعش الكوع من على الوسادة.","اعصر العضلة ثانية فوق."],"enHow":["Sit down on the Preacher Curl Machine and select the weight.","Place the back of your upper arms (your triceps) on the preacher pad provided and grab the handles using an underhand grip (palms facing up). Tip: Make sure that when you place the arms on the pad you keep the elbows in. This will be your starting position.","Now lift the handles as you exhale and you contract the biceps. At the top of the position make sure that you hold the contraction for a second. Tip: Only the forearms should move. The upper arms should remain stationary and on the pad at all times.","Lower the handles slowly back to the starting position as you inhale.","Repeat for the recommended amount of repetitions."],"muscles":["biceps"],"similar":false,"muscles2":[],"yq":"Matrix Versa Biceps Curl how to use","vid":{"id":"o5GIQhVHNhI","t":0,"title":"Ultra Series | Biceps Curl — Setup & Movements","ch":"Matrix Fitness","dur":"0:54","official":true},"photo":"https://assets.jhtbrand.co/files/product/edcf820acb4edc7e1934c3a6f318ab4cfb5a5047/","pkind":"p","model":"Matrix Ultra G7-S40 Biceps Curl"},{"id":"preacher_curl","name":"بريتشر كيرل","en":"Matrix Magnum Preacher Curl","group":"biceps","slot":"bi","type":"free","seen":"5:36","compound":false,"lvl":0,"avoid":[],"setup":["اقعد على البنش ودراعك ممدود على الوسادة المايلة.","امسك بار EZ أو دمبل."],"how":["اطوي لفوق لحد ما الوزن يقرب من كتفك.","انزل ببطء، ومن غير ما تقفل الكوع تحت."],"tips":["الجزء اللي تحت هو الأهم، فانزل ببطء."],"enHow":["To perform this movement you will need a preacher bench and an E-Z bar. Grab the E-Z curl bar at the close inner handle (either have someone hand you the bar which is preferable or grab the bar from the front bar rest provided by most preacher benches). The palm of your hands should be facing forward and they should be slightly tilted inwards due to the shape of the bar.","With the upper arms positioned against the preacher bench pad and the chest against it, hold the E-Z Curl Bar at shoulder length. This will be your starting position.","As you breathe in, slowly lower the bar until your upper arm is extended and the biceps is fully stretched.","As you exhale, use the biceps to curl the weight up until your biceps is fully contracted and the bar is at shoulder height. Squeeze the biceps hard and hold this position for a second.","Repeat for the recommended amount of repetitions."],"muscles":["biceps"],"similar":false,"muscles2":[],"yq":"Preacher Curl Bench how to use","vid":{"id":"9WDQqgiwQEY","t":0,"title":"Preacher Curl: Form & Tips","ch":"One Minute Tutorial","dur":"1:01","official":false},"photo":"https://assets.jhtbrand.co/files/product/8403e1794b33f6738fa72085b6a8e3eace525e16/","pkind":"p","model":"Matrix Magnum MG-A62 Preacher Curl"},{"id":"cable_curl","name":"باي كابل","en":"Cable Biceps Curl","group":"biceps","slot":"bi","type":"cable","seen":"4:32","compound":false,"lvl":0,"avoid":[],"setup":["حط البكرة تحت خالص وركّب البار.","اقف مفرود والكوع جنب جسمك."],"how":["اطوي لفوق ناحية كتفك.","انزل ببطء."],"tips":["الكوع ثابت جنب جسمك، ماتحركوش لقدام."],"enHow":["Stand up with your torso upright while holding a cable curl bar that is attached to a low pulley. Grab the cable bar at shoulder width and keep the elbows close to the torso. The palm of your hands should be facing up (supinated grip). This will be your starting position.","While holding the upper arms stationary, curl the weights while contracting the biceps as you breathe out. Only the forearms should move. Continue the movement until your biceps are fully contracted and the bar is at shoulder level. Hold the contracted position for a second as you squeeze the muscle.","Slowly begin to bring the curl bar back to starting position as your breathe in.","Repeat for the recommended amount of repetitions."],"muscles":["biceps"],"similar":false,"muscles2":[],"yq":"cable biceps curl how to use","vid":{"id":"2MUEL4nL6hA","t":0,"title":"How to Properly Cable Bicep Curl","ch":"Colossus Fitness","dur":"1:13","official":false},"photo":"https://i.ytimg.com/vi/2MUEL4nL6hA/hqdefault.jpg","pkind":"v"},{"id":"hammer_curl","name":"هامر كيرل دمبل","en":"Dumbbell Hammer Curl","group":"biceps","slot":"bi","type":"free","seen":"6:16","compound":false,"lvl":0,"avoid":[],"setup":["امسك دمبل في كل إيد، وكف إيدك ناحية جسمك."],"how":["اطوي لفوق ومسكة الإيد زي ما هي.","انزل ببطء."],"tips":["بيشغّل عضلة الساعد كمان.","ماتتمرجحش بجسمك."],"enHow":["Stand up with your torso upright and a dumbbell on each hand being held at arms length. The elbows should be close to the torso.","The palms of the hands should be facing your torso. This will be your starting position.","Now, while holding your upper arm stationary, exhale and curl the weight forward while contracting the biceps. Continue to raise the weight until the biceps are fully contracted and the dumbbell is at shoulder level. Hold the contracted position for a brief moment as you squeeze the biceps. Tip: Focus on keeping the elbow stationary and only moving your forearm.","After the brief pause, inhale and slowly begin the lower the dumbbells back down to the starting position.","Repeat for the recommended amount of repetitions."],"muscles":["biceps"],"similar":false,"muscles2":[],"yq":"Dumbbell Hammer Curl how to use","vid":{"id":"OPqe0kCxmR8","t":26,"title":"Dumbbell Hammer Curls — Correct Technique","ch":"One Minute Tutorial","dur":"1:04","official":false},"photo":"https://i.ytimg.com/vi/OPqe0kCxmR8/hqdefault.jpg","pkind":"v"},{"id":"triceps_machine","name":"تراي جهاز","en":"Matrix Ultra Triceps Extension","group":"triceps","slot":"tri","type":"machine","seen":"0:08","compound":false,"lvl":0,"avoid":[],"setup":["ظبّط الكرسي بحيث الكوع على الوسادة وعند مفصل الجهاز."],"how":["افرد دراعك لتحت ولقدام لحد ما يتفرد خالص.","ارجع ببطء."],"tips":["الكوع ثابت على الوسادة.","اعصر التراي ثانية في الآخر."],"enHow":["Adjust the seat to the appropriate height and make your weight selection. Place your upper arms against the pads and grasp the handles. This will be your starting position.","Perform the movement by extending the elbow, pulling your lower arm away from your upper arm.","Pause at the completion of the movement, and then slowly return the weight to the starting position.","Avoid returning the weight all the way to the stops until the set is complete to keep tension on the muscles being worked."],"muscles":["triceps"],"similar":false,"muscles2":[],"yq":"Matrix Versa Triceps Extension how to use","vid":{"id":"QW3v5sEaQyI","t":0,"title":"Ultra Series | Triceps Extension","ch":"Matrix Fitness","dur":"0:36","official":true},"photo":"https://assets.jhtbrand.co/files/product/e680d9c7abd9a90ac03afe477010e4a4232d900d/","pkind":"p","model":"Matrix Ultra G7-S45 Triceps Extension"},{"id":"pressdown","name":"تراي بوش داون كابل","en":"Cable Triceps Pressdown","group":"triceps","slot":"tri","type":"cable","seen":"5:12","compound":false,"lvl":0,"avoid":[],"setup":["حط البكرة فوق خالص، وركّب الحبل أو البار.","اقف ومِل لقدام شوية، والكوع جنب جسمك."],"how":["ادفع لتحت لحد ما دراعك يتفرد.","اطلع ببطء لحد ما الساعد يبقى موازي للأرض تقريبًا."],"tips":["الكوع مايتحركش، الساعد بس اللي بيتحرك."],"enHow":["Attach a rope attachment to a high pulley and grab with a neutral grip (palms facing each other).","Standing upright with the torso straight and a very small inclination forward, bring the upper arms close to your body and perpendicular to the floor. The forearms should be pointing up towards the pulley as they hold the rope with the palms facing each other. This is your starting position.","Using the triceps, bring the rope down as you bring each side of the rope to the side of your thighs. At the end of the movement the arms are fully extended and perpendicular to the floor. The upper arms should always remain stationary next to your torso and only the forearms should move. Exhale as you perform this movement.","After holding for a second, at the contracted position, bring the rope slowly up to the starting point. Breathe in as you perform this step.","Repeat for the recommended amount of repetitions."],"muscles":["triceps"],"similar":false,"muscles2":[],"yq":"triceps rope pushdown how to use","vid":{"id":"vB5OHsJ3EME","t":0,"title":"How To: Rope Push-Down","ch":"ScottHermanFitness","dur":"1:33","official":false},"photo":"https://i.ytimg.com/vi/vB5OHsJ3EME/hqdefault.jpg","pkind":"v"},{"id":"dips","name":"متوازي بالمساعدة","en":"Matrix Chin / Dip Assist","group":"triceps","slot":"tri","type":"machine","seen":"7:48","compound":true,"lvl":0,"avoid":["shoulder"],"setup":["نفس جهاز العقلة بالمساعدة، بس امسك المقابض اللي تحت.","اختار وزن المساعدة واركع على المسند."],"how":["انزل لحد ما الكوع يبقى زاوية 90 درجة.","ادفع لفوق لحد ما دراعك يتفرد."],"tips":["جسمك مفرود عشان يركز على التراي، ولو ميّلته لقدام هيشتغل الصدر أكتر.","ماتنزلش أوطى من كده لو كتفك بيوجعك."],"enHow":["Sit securely in a dip machine, select the weight and firmly grasp the handles.","Now keep your elbows in at your sides in order to place emphasis on the triceps. The elbows should be bent at a 90 degree angle.","As you contract the triceps, extend your arms downwards as you exhale. Tip: At the bottom of the movement, focus on keeping a little bend in your arms to keep tension on the triceps muscle.","Now slowly let your arms come back up to the starting position as you inhale.","Repeat for the recommended amount of repetitions."],"muscles":["triceps"],"similar":false,"muscles2":["chest","shoulders"],"yq":"Matrix assisted dip machine how to use","vid":{"id":"CCPFFukj7ss","t":0,"title":"Matrix Versa Chin / Dip Assist — Setup & Movements","ch":"Matrix Fitness","dur":"0:48","official":true},"photo":"https://assets.jhtbrand.co/files/product/2d3dfb6fb46aff91554a6d178fcaa6c12d1e85ce/","pkind":"p","model":"Matrix Chin / Dip Assist"},{"id":"leg_press","name":"ليج برس 45°","en":"Matrix Magnum 45° Leg Press","group":"quads","slot":"quad_main","type":"plate","seen":"9:44","compound":true,"lvl":0,"avoid":[],"setup":["اقعد وضهرك كله على المسند.","رجلك على اللوح بعرض الكتف تقريبًا.","فك الأمان بعد ما تفرد رجلك."],"how":["انزل باللوح ببطء لحد ما الركبة تبقى زاوية 90 درجة تقريبًا.","ادفع لفوق من كعب رجلك."],"tips":["ماتقفلش الركبة فوق خالص.","ماتخليش أسفل ضهرك يرتفع من على المسند تحت."],"enHow":["Using a leg press machine, sit down on the machine and place your legs on the platform directly in front of you at a medium (shoulder width) foot stance. (Note: For the purposes of this discussion we will use the medium stance described above which targets overall development; however you can choose any of the three stances described in the foot positioning section).","Lower the safety bars holding the weighted platform in place and press the platform all the way up until your legs are fully extended in front of you. Tip: Make sure that you do not lock your knees. Your torso and the legs should make a perfect 90-degree angle. This will be your starting position.","As you inhale, slowly lower the platform until your upper and lower legs make a 90-degree angle.","Pushing mainly with the heels of your feet and using the quadriceps go back to the starting position as you exhale.","Repeat for the recommended amount of repetitions and ensure to lock the safety pins properly once you are done. You do not want that platform falling on you fully loaded."],"muscles":["quadriceps"],"similar":false,"muscles2":["calves","glutes","hamstrings"],"yq":"45 degree leg press machine how to use","vid":{"id":"sI5PJZx73H8","t":0,"title":"Matrix Magnum 45° Leg Press — How to Use","ch":"Matrix Fitness","dur":"1:15","official":true},"photo":"https://i.ytimg.com/vi/sI5PJZx73H8/maxresdefault.jpg","pkind":"v","model":"Matrix Magnum 45° Leg Press"},{"id":"hack_squat","name":"هاك سكوات / V-Squat","en":"Hammer Strength V-Squat","group":"quads","slot":"quad_main","type":"plate","seen":"10:16","compound":true,"lvl":0,"avoid":["knee"],"setup":["ضهرك على المسند، وكتفك تحت الوسادات.","رجلك على اللوح بعرض الكتف، وفي النص أو أعلى شوية."],"how":["انزل ببطء لحد ما فخدك يبقى موازي للوح تقريبًا.","ادفع لفوق من كعبك."],"tips":["الركبة بتمشي في نفس اتجاه صوابع رجلك.","ماتخليش كعبك يرتفع."],"enHow":["Place the back of your torso against the back pad of the machine and hook your shoulders under the shoulder pads provided.","Position your legs in the platform using a shoulder width medium stance with the toes slightly pointed out. Tip: Keep your head up at all times and also maintain the back on the pad at all times.","Place your arms on the side handles of the machine and disengage the safety bars (which on most designs is done by moving the side handles from a facing front position to a diagonal position).","Now straighten your legs without locking the knees. This will be your starting position. (Note: For the purposes of this discussion we will use the medium stance described above which targets overall development; however you can choose any of the three stances described in the foot positioning section).","Begin to slowly lower the unit by bending the knees as you maintain a straight posture with the head up (back on the pad at all times). Continue down until the angle between the upper leg and the calves becomes slightly less than 90-degrees (which is the point in which the upper legs are below parallel to the floor). Inhale as you perform this portion of the movement. Tip: If you performed the exercise correctly, the front of the knees should make an imaginary straight line with the toes that is perpendicular to the front. If your knees are past that imaginary line (if they are past your toes) then you are placing undue stress on the knee and the exercise has been performed incorrectly.","Begin to raise the unit as you exhale by pushing the floor with mainly with the heel of your foot as you straighten the legs again and go back to the starting position.","Repeat for the recommended amount of repetitions."],"muscles":["quadriceps"],"similar":false,"muscles2":["calves","glutes","hamstrings"],"yq":"Hammer Strength V-Squat how to use","vid":{"id":"j6bEZhsOyVc","t":0,"title":"Hammer Strength V-Squat","ch":"Life Fitness / Hammer Strength","dur":"0:33","official":true},"photo":"https://i.ytimg.com/vi/j6bEZhsOyVc/maxresdefault.jpg","pkind":"v","model":"Hammer Strength V-Squat"},{"id":"pendulum_squat","name":"بندولوم سكوات","en":"Matrix Magnum Pendulum Squat","group":"quads","slot":"quad_main","type":"plate","seen":"8:48","compound":true,"lvl":1,"avoid":["knee"],"setup":["ضهرك على المسند وكتفك تحت الوسادات.","رجلك على اللوح المايل."],"how":["انزل لتحت عميق ببطء.","ادفع لفوق من نص رجلك."],"tips":["ممتاز للعضلة الأمامية، وأخف على الضهر من السكوات بالبار."],"enHow":["Place the back of your torso against the back pad of the machine and hook your shoulders under the shoulder pads provided.","Position your legs in the platform using a less than shoulder width narrow stance with the toes slightly pointed out. Your feet should be around 3 inches or less apart. Tip: Keep your head up at all times and also maintain the back on the pad at all times.","Place your arms on the side handles of the machine and disengage the safety bars (which on most designs is done by moving the side handles from a facing front position to a diagonal position).","Now straighten your legs without locking the knees. This will be your starting position.","Begin to slowly lower the unit by bending the knees as you maintain a straight posture with the head up (back on the pad at all times). Continue down until the angle between the upper leg and the calves becomes slightly less than 90-degrees (which is the point in which the upper legs are below parallel to the floor). Inhale as you perform this portion of the movement.","Begin to raise the unit as you exhale by pushing the floor with mainly with the heels of your feet as you straighten the legs again and go back to the starting position.","Repeat for the recommended amount of repetitions."],"muscles":["quadriceps"],"similar":true,"muscles2":["calves","glutes","hamstrings"],"yq":"Matrix Magnum Pendulum Squat how to use","vid":{"id":"zXEJX3Ajudo","t":0,"title":"Matrix Magnum Pendulum Squat — How to Use","ch":"Matrix Fitness","dur":"1:12","official":true},"photo":"https://i.ytimg.com/vi/zXEJX3Ajudo/maxresdefault.jpg","pkind":"v","model":"Matrix Magnum Pendulum Squat"},{"id":"belt_squat","name":"بِلت سكوات","en":"Matrix Magnum Belt Squat","group":"quads","slot":"quad_main","type":"plate","seen":"9:00","compound":true,"lvl":0,"avoid":["knee"],"setup":["اربط الحزام حوالين وسطك ووصّله بالجهاز.","اقف على المنصة وامسك المسكة اللي قدامك."],"how":["انزل زي السكوات العادي وصدرك لفوق.","اطلع بدفع من رجلك."],"tips":["مافيش ضغط على الضهر خالص، ومناسب جدًا لو ضهرك تعبان."],"enHow":["To begin, first set the bar to a position that best matches your height. Once the bar is loaded, step under it and position it across the back of your shoulders.","Take the bar with your hands facing forward, unlock it and lift it off the rack by extending your legs.","Move your feet forward about 18 inches in front of the bar. Position your legs using a shoulder width stance with the toes slightly pointed out. Look forward at all times and maintain a neutral or slightly arched spine. This will be your starting position.","Slowly lower the bar by bending the knees as you maintain a straight posture with the head up. Continue down until the angle between the upper and lower leg breaks 90 degrees.","Begin to raise the bar as you exhale by pushing the floor with the heels of your feet, extending the knees and returning to the starting position.","Repeat for the recommended amount of repetitions."],"muscles":["quadriceps"],"similar":true,"muscles2":["calves","glutes","hamstrings"],"yq":"Matrix Magnum Belt Squat how to use","vid":{"id":"tY26yuax9VY","t":0,"title":"Matrix Plate-loaded Belt Squat — How to Use","ch":"Matrix Fitness","dur":"0:58","official":true},"photo":"https://i.ytimg.com/vi/tY26yuax9VY/maxresdefault.jpg","pkind":"v","model":"Matrix Magnum Belt Squat"},{"id":"goblet_squat","name":"جوبلت سكوات","en":"Goblet Squat","group":"quads","slot":"quad_main","type":"free","seen":"6:16","compound":true,"lvl":0,"avoid":["knee"],"setup":["امسك دمبل قدام صدرك بالإيدين.","رجلك أعرض من الكتف شوية، وصوابعك لبره شوية."],"how":["انزل لتحت كأنك بتقعد على كرسي.","اطلع وانت بتدفع من كعبك."],"tips":["صدرك لفوق وضهرك مفرود.","تمرين ممتاز للمبتدئين عشان تتعلم السكوات."],"enHow":["Stand holding a light kettlebell by the horns close to your chest. This will be your starting position.","Squat down between your legs until your hamstrings are on your calves. Keep your chest and head up and your back straight.","At the bottom position, pause and use your elbows to push your knees out. Return to the starting position, and repeat for 10-20 repetitions."],"muscles":["quadriceps"],"similar":false,"muscles2":["calves","glutes","hamstrings","shoulders"],"yq":"Goblet Squat how to use","vid":{"id":"gCESNsDsbqk","t":0,"title":"Goblet Squats: Proper Form & Technique","ch":"BuiltLean","dur":"1:06","official":false},"photo":"https://i.ytimg.com/vi/gCESNsDsbqk/hqdefault.jpg","pkind":"v"},{"id":"leg_ext","name":"ليج إكستنشن","en":"Matrix Ultra Leg Extension","group":"quads","slot":"quad_iso","type":"machine","seen":"2:08","compound":false,"lvl":0,"avoid":["knee"],"setup":["ظبّط المسند بحيث ركبتك عند مفصل الجهاز بالظبط.","الوسادة على أسفل رجلك فوق الكاحل."],"how":["افرد رجلك لفوق لحد ما تتفرد.","انزل ببطء."],"tips":["اعصر العضلة ثانية فوق.","امسك المقابض اللي جنبك عشان تثبت."],"enHow":["For this exercise you will need to use a leg extension machine. First choose your weight and sit on the machine with your legs under the pad (feet pointed forward) and the hands holding the side bars. This will be your starting position. Tip: You will need to adjust the pad so that it falls on top of your lower leg (just above your feet). Also, make sure that your legs form a 90-degree angle between the lower and upper leg. If the angle is less than 90-degrees then that means the knee is over the toes which in turn creates undue stress at the knee joint. If the machine is designed that way, either look for another machine or just make sure that when you start executing the exercise you stop going down once you hit the 90-degree angle.","Using your quadriceps, extend your legs to the maximum as you exhale. Ensure that the rest of the body remains stationary on the seat. Pause a second on the contracted position.","Slowly lower the weight back to the original position as you inhale, ensuring that you do not go past the 90-degree angle limit.","Repeat for the recommended amount of times."],"muscles":["quadriceps"],"similar":false,"muscles2":[],"yq":"Matrix Versa Leg Extension how to use","vid":{"id":"MoP3os3zYWI","t":0,"title":"Ultra Series | Leg Extension","ch":"Matrix Fitness","dur":"0:36","official":true},"photo":"https://assets.jhtbrand.co/files/product/44f487d03d6a5cb42e5192dc250cfab31bb4f4dd/","pkind":"p","model":"Matrix Ultra G7-S71 Leg Extension"},{"id":"seated_leg_curl","name":"ليج كيرل قاعد","en":"Matrix Ultra Seated Leg Curl","group":"hams","slot":"ham","type":"machine","seen":"2:44","compound":false,"lvl":0,"avoid":[],"setup":["ركبتك عند مفصل الجهاز.","الوسادة اللي تحت على أسفل سمانة رجلك، والوسادة اللي فوق على فخدك."],"how":["اطوي رجلك لتحت ولورا.","ارجع ببطء."],"tips":["ماترفعش وسطك من على الكرسي."],"enHow":["Adjust the machine lever to fit your height and sit on the machine with your back against the back support pad.","Place the back of lower leg on top of padded lever (just a few inches under the calves) and secure the lap pad against your thighs, just above the knees. Then grasp the side handles on the machine as you point your toes straight (or you can also use any of the other two stances) and ensure that the legs are fully straight right in front of you. This will be your starting position.","As you exhale, pull the machine lever as far as possible to the back of your thighs by flexing at the knees. Keep your torso stationary at all times. Hold the contracted position for a second.","Slowly return to the starting position as you breathe in.","Repeat for the recommended amount of repetitions."],"muscles":["hamstrings"],"similar":false,"muscles2":[],"yq":"Matrix Versa Seated Leg Curl how to use","vid":{"id":"FlcLl-lVVgY","t":0,"title":"Ultra Series | Seated Leg Curl","ch":"Matrix Fitness","dur":"0:50","official":true},"photo":"https://assets.jhtbrand.co/files/product/c6634bc030c9577d30b7087f5057a45aec845ccc/","pkind":"p","model":"Matrix Ultra G7-S72 Seated Leg Curl"},{"id":"lying_leg_curl","name":"ليج كيرل نايم","en":"Matrix Ultra Prone Leg Curl","group":"hams","slot":"ham","type":"machine","seen":"2:40","compound":false,"lvl":0,"avoid":[],"setup":["نام على بطنك والركبة بعد حافة البنش بشوية.","الوسادة فوق الكاحل من ورا."],"how":["اطوي رجلك لفوق ناحية المؤخرة.","انزل ببطء."],"tips":["وسطك لازق في البنش."],"enHow":["Adjust the machine lever to fit your height and lie face down on the leg curl machine with the pad of the lever on the back of your legs (just a few inches under the calves). Tip: Preferably use a leg curl machine that is angled as opposed to flat since an angled position is more favorable for hamstrings recruitment.","Keeping the torso flat on the bench, ensure your legs are fully stretched and grab the side handles of the machine. Position your toes straight (or you can also use any of the other two stances described on the foot positioning section). This will be your starting position.","As you exhale, curl your legs up as far as possible without lifting the upper legs from the pad. Once you hit the fully contracted position, hold it for a second.","As you inhale, bring the legs back to the initial position. Repeat for the recommended amount of repetitions."],"muscles":["hamstrings"],"similar":false,"muscles2":[],"yq":"Matrix Versa Prone Leg Curl how to use","vid":{"id":"rQage9oXFLM","t":0,"title":"Matrix Ultra Prone Leg Curl — Movements","ch":"Matrix Fitness","dur":"0:42","official":true},"photo":"https://assets.jhtbrand.co/files/product/6f9d3ecd61ff3ea390fb25871eaaeb55782f2152/","pkind":"p","model":"Matrix Ultra G7-S73 Prone Leg Curl"},{"id":"kneeling_leg_curl","name":"ليج كيرل راكع (رجل واحدة)","en":"Matrix Magnum Kneeling Leg Curl","group":"hams","slot":"ham","type":"plate","seen":"9:24","compound":false,"lvl":0,"avoid":["knee"],"setup":["اركع على المسند، والوسادة ورا كاحل الرجل اللي هتشتغل بيها."],"how":["اطوي رجلك لفوق.","انزل ببطء."],"tips":["كل رجل لوحدها بتصلّح فرق القوة بين الرجلين."],"enHow":["Adjust the machine lever to fit your height and lie with your torso bent at the waist facing forward around 30-45 degrees (since an angled position is more favorable for hamstrings recruitment) with the pad of the lever on the back of your right leg (just a few inches under the calves) and the front of the right leg on top of the machine pad.","Keeping the torso bent forward, ensure your leg is fully stretched and grab the side handles of the machine. Position your toes straight. This will be your starting position.","As you exhale, curl your right leg up as far as possible without lifting the upper leg from the pad. Once you hit the fully contracted position, hold it for a second.","As you inhale, bring the legs back to the initial position. Repeat for the recommended amount of repetitions.","Perform the same exercise now for the left leg."],"muscles":["hamstrings"],"similar":true,"muscles2":[],"yq":"Matrix Magnum Kneeling Leg Curl how to use","vid":{"id":"H24DTaxAXqo","t":0,"title":"Matrix Plate-loaded Kneeling Leg Curl","ch":"Matrix Fitness","dur":"0:49","official":true},"photo":"https://i.ytimg.com/vi/H24DTaxAXqo/maxresdefault.jpg","pkind":"v","model":"Matrix Magnum Kneeling Leg Curl"},{"id":"rdl","name":"رومانيان ديدلفت دمبل","en":"Dumbbell Romanian Deadlift","group":"hams","slot":"hinge","type":"free","seen":"6:16","compound":true,"lvl":1,"avoid":["lowerback"],"setup":["امسك دمبل في كل إيد، ورجلك بعرض الحوض."],"how":["ارجع بوسطك لورا والدمبلز ماشيين قريب من رجلك.","انزل لحد ما تحس بشد ورا الفخد.","اطلع وانت بتدفع وسطك لقدام."],"tips":["ضهرك مفرود طول الوقت، ماتقوّسهوش.","الركبة منحنية شوية وثابتة."],"enHow":["Grasp a couple of dumbbells holding them by your side at arm's length.","Stand with your torso straight and your legs spaced using a shoulder width or narrower stance. The knees should be slightly bent. This is your starting position.","Keeping the knees stationary, lower the dumbbells to over the top of your feet by bending at the waist while keeping your back straight. Keep moving forward as if you were going to pick something from the floor until you feel a stretch on the hamstrings. Exhale as you perform this movement","Start bringing your torso up straight again by extending your hips and waist until you are back at the starting position. Inhale as you perform this movement.","Repeat for the recommended amount of repetitions."],"muscles":["hamstrings"],"similar":false,"muscles2":["glutes","lower back"],"yq":"Dumbbell Romanian Deadlift how to use","vid":{"id":"aa57T45iFSE","t":0,"title":"How to do a Dumbbell Romanian Deadlift","ch":"NASM","dur":"0:31","official":false},"photo":"https://i.ytimg.com/vi/aa57T45iFSE/hqdefault.jpg","pkind":"v"},{"id":"hip_thrust","name":"هيب ثرست جهاز","en":"Matrix Ultra Hip Thrust","group":"glutes","slot":"glute","type":"machine","seen":"3:16","compound":true,"lvl":0,"avoid":[],"setup":["أعلى ضهرك على المسند والحزام/الوسادة على وسطك.","رجلك على الأرض بعرض الحوض."],"how":["ادفع وسطك لفوق لحد ما جسمك يبقى خط مستقيم من الكتف للركبة.","اعصر المؤخرة ثانية، وانزل ببطء."],"tips":["دقنك لتحت شوية، وعينك لقدام.","الدفع من الكعب."],"enHow":["Begin seated on the ground with a bench directly behind you. Have a loaded barbell over your legs. Using a fat bar or having a pad on the bar can greatly reduce the discomfort caused by this exercise.","Roll the bar so that it is directly above your hips, and lean back against the bench so that your shoulder blades are near the top of it.","Begin the movement by driving through your feet, extending your hips vertically through the bar. Your weight should be supported by your shoulder blades and your feet. Extend as far as possible, then reverse the motion to return to the starting position."],"muscles":["glutes"],"similar":true,"muscles2":["calves","hamstrings"],"yq":"Matrix Hip Thrust machine how to use","vid":{"id":"eaU-gdh9BCY","t":0,"title":"Matrix Hip Thrust","ch":"Matrix Fitness","dur":"0:44","official":true},"photo":"https://assets.jhtbrand.co/files/product/7009f01e67a38682b80793e4a115254c9a852db2/","pkind":"p","model":"Matrix Ultra G7-S79 Hip Thrust"},{"id":"standing_hip_thrust","name":"هيب ثرست واقف","en":"Matrix Magnum Standing Hip Thrust","group":"glutes","slot":"glute","type":"plate","seen":"8:32","compound":true,"lvl":0,"avoid":[],"setup":["اقف والوسادة على وسطك من قدام.","امسك المقابض."],"how":["ارجع بوسطك لورا وانت مايل لقدام.","ادفع وسطك لقدام بقوة، واعصر المؤخرة."],"tips":["الحركة من الوسط، مش من الضهر."],"enHow":["Begin standing a few feet in front of a low pulley with a rope or handle attached. Face away from the machine, straddling the cable, with your feet set wide apart.","Begin the movement by reaching through your legs as far as possible, bending at the hips. Keep your knees slightly bent. Keeping your arms straight, extend through the hip to stand straight up. Avoid pulling upward through the shoulders; all of the motion should originate through the hips."],"muscles":["glutes"],"similar":true,"muscles2":["hamstrings","lower back"],"yq":"Matrix Magnum Standing Hip Thrust how to use","vid":{"id":"D5g5joMA3e0","t":0,"title":"Matrix Plate-loaded Standing Hip Thrust","ch":"Matrix Fitness","dur":"0:47","official":true},"photo":"https://i.ytimg.com/vi/D5g5joMA3e0/maxresdefault.jpg","pkind":"v","model":"Matrix Magnum Standing Hip Thrust"},{"id":"abductor","name":"أبدكتور (فتح الرجل)","en":"Matrix Ultra Hip Abduction","group":"glutes","slot":"abd","type":"machine","seen":"2:52","compound":false,"lvl":0,"avoid":[],"setup":["اقعد والوسادات على رجلك من بره عند الركبة."],"how":["افتح رجلك للجنب.","ارجع ببطء."],"tips":["مِل لقدام شوية عشان يشتغل الجزء العلوي من المؤخرة أكتر."],"enHow":["To begin, sit down on the abductor machine and select a weight you are comfortable with. When your legs are positioned properly, grip the handles on each side. Your entire upper body (from the waist up) should be stationary. This is the starting position.","Slowly press against the machine with your legs to move them away from each other while exhaling.","Feel the contraction for a second and begin to move your legs back to the starting position while breathing in. Note: Remember to keep your upper body stationary to prevent any injuries from occurring.","Repeat for the recommended amount of repetitions."],"muscles":["abductors"],"similar":false,"muscles2":["glutes"],"yq":"Matrix Versa Hip Abductor how to use","vid":{"id":"UvBINg1E4eU","t":0,"title":"Ultra Series | Hip Abductor","ch":"Matrix Fitness","dur":"0:44","official":true},"photo":"https://assets.jhtbrand.co/files/product/edd0fcf9258634765093efe3e01f8f364441e3e4/","pkind":"p","model":"Matrix Ultra G7-S75 Hip Abduction"},{"id":"adductor","name":"أدكتور (قفل الرجل)","en":"Matrix Ultra Hip Adduction","group":"glutes","slot":"add","type":"machine","seen":"2:32","compound":false,"lvl":0,"avoid":[],"setup":["اقعد والوسادات على رجلك من جوه.","ابدأ بفتحة تكون مريحة ليك."],"how":["اقفل رجلك لجوه.","افتح ببطء."],"tips":["ماتفتحش أكتر من اللي تقدر عليه."],"enHow":["To begin, sit down on the adductor machine and select a weight you are comfortable with. When your legs are positioned properly on the leg pads of the machine, grip the handles on each side. Your entire upper body (from the waist up) should be stationary. This is the starting position.","Slowly press against the machine with your legs to move them towards each other while exhaling.","Feel the contraction for a second and begin to move your legs back to the starting position while breathing in. Note: Remember to keep your upper body stationary and avoid fast jerking motions in order to prevent any injuries from occurring.","Repeat for the recommended amount of repetitions."],"muscles":["adductors"],"similar":false,"muscles2":["glutes","hamstrings"],"yq":"Matrix Versa Hip Adductor how to use","vid":{"id":"FlnJ4sxbMr0","t":0,"title":"Ultra Series | Hip Adductor","ch":"Matrix Fitness","dur":"0:44","official":true},"photo":"https://assets.jhtbrand.co/files/product/8781392e7ba72bdc5c80ca38f40ca95c44f2b6df/","pkind":"p","model":"Matrix Ultra G7-S74 Hip Adduction"},{"id":"calf_press","name":"سمانة على الليج برس","en":"Matrix Magnum 45° Leg Press","group":"quads","slot":"calf","type":"plate","seen":"9:44","compound":false,"lvl":0,"avoid":[],"setup":["على جهاز الليج برس، حط مقدمة رجلك بس على طرف اللوح.","رجلك مفرودة."],"how":["ادفع بمقدمة رجلك لحد ما تقف على صوابعك.","انزل ببطء لحد ما تحس بفرد."],"tips":["ماتفكش الأمان وانت مش ماسك الوزن كويس.","عدّات كتير وببطء."],"enHow":["Using a leg press machine, sit down on the machine and place your legs on the platform directly in front of you at a medium (shoulder width) foot stance.","Lower the safety bars holding the weighted platform in place and press the platform all the way up until your legs are fully extended in front of you without locking your knees. (Note: In some leg press units you can leave the safety bars on for increased safety. If your leg press unit allows for this, then this is the preferred method of performing the exercise.) Your torso and the legs should make perfect 90-degree angle. Now carefully place your toes and balls of your feet on the lower portion of the platform with the heels extending off. Toes should be facing forward, outwards or inwards as described at the beginning of the chapter. This will be your starting position.","Press on the platform by raising your heels as you breathe out by extending your ankles as high as possible and flexing your calf. Ensure that the knee is kept stationary at all times. There should be no bending at any time. Hold the contracted position by a second before you start to go back down.","Go back slowly to the starting position as you breathe in by lowering your heels as you bend the ankles until calves are stretched.","Repeat for the recommended amount of repetitions."],"muscles":["calves"],"similar":false,"muscles2":[],"yq":"calf press on leg press machine how to use","vid":{"id":"M4FojyRAcuE","t":0,"title":"Leg Press Calf Raise","ch":"Tiger Fitness","dur":"0:39","official":false},"photo":"https://i.ytimg.com/vi/sI5PJZx73H8/maxresdefault.jpg","pkind":"v","model":"Matrix Magnum 45° Leg Press"},{"id":"ab_crunch","name":"أب كرانش هامر سترينث","en":"Hammer Strength Abdominal Oblique Crunch","group":"core","slot":"core","type":"plate","seen":"7:40","compound":false,"lvl":0,"avoid":[],"setup":["اقعد وامسك المقابض اللي جنب راسك.","رجلك تحت الوسادات."],"how":["اطوي جسمك لقدام ولتحت بعضلة البطن.","ارجع ببطء."],"tips":["ماتشدّش بإيدك، البطن هي اللي بتشتغل.","طلّع النفس وانت نازل."],"enHow":["Select a light resistance and sit down on the ab machine placing your feet under the pads provided and grabbing the top handles. Your arms should be bent at a 90 degree angle as you rest the triceps on the pads provided. This will be your starting position.","At the same time, begin to lift the legs up as you crunch your upper torso. Breathe out as you perform this movement. Tip: Be sure to use a slow and controlled motion. Concentrate on using your abs to move the weight while relaxing your legs and feet.","After a second pause, slowly return to the starting position as you breathe in.","Repeat the movement for the prescribed amount of repetitions."],"muscles":["abdominals"],"similar":false,"muscles2":[],"yq":"Hammer Strength Abdominal Oblique Crunch how to use","vid":{"id":"n7BVPqR-Hhc","t":0,"title":"Hammer Strength Abdominal Oblique Crunch","ch":"Life Fitness / Hammer Strength","dur":"0:45","official":true},"photo":"https://i.ytimg.com/vi/n7BVPqR-Hhc/maxresdefault.jpg","pkind":"v","model":"Hammer Strength Abdominal Oblique Crunch"},{"id":"decline_situp","name":"سيت أب على بنش مايل","en":"Matrix Magnum Adjustable Ab Bench","group":"core","slot":"core","type":"body","seen":"9:08","compound":false,"lvl":0,"avoid":["lowerback"],"setup":["ثبّت رجلك تحت الوسادات.","إيدك على صدرك."],"how":["اطلع بجسمك لفوق بالبطن.","انزل ببطء من غير ما ترتاح خالص تحت."],"tips":["ابدأ بزاوية ميل قليلة."],"enHow":["Secure your legs at the end of the decline bench and lie down.","Now place your hands lightly on either side of your head keeping your elbows in. Tip: Don't lock your fingers behind your head.","While pushing the small of your back down in the bench to better isolate your abdominal muscles, begin to roll your shoulders off it.","Continue to push down as hard as you can with your lower back as you contract your abdominals and exhale. Your shoulders should come up off the bench only about four inches, and your lower back should remain on the bench. At the top of the movement, contract your abdominals hard and keep the contraction for a second. Tip: Focus on slow, controlled movement - don't cheat yourself by using momentum.","After the one second contraction, begin to come down slowly again to the starting position as you inhale.","Repeat for the recommended amount of repetitions."],"muscles":["abdominals"],"similar":true,"muscles2":[],"yq":"decline sit up bench how to use","vid":{"id":"FRzQXeN1hro","t":0,"title":"Decline Crunch","ch":"MyTraining App","dur":"0:43","official":false},"photo":"https://assets.jhtbrand.co/files/product/3020965ee5be46eb024baccb8098324b71d761f9/","pkind":"p","model":"Matrix Magnum MG-A77 Adjustable Ab Bench"},{"id":"plank","name":"بلانك","en":"Plank","group":"core","slot":"core","type":"body","seen":"","compound":false,"lvl":0,"avoid":[],"timed":true,"setup":["على الأرض، على الكوعين وصوابع رجلك."],"how":["جسمك خط مستقيم من الراس للكعب.","اثبت للمدة المطلوبة وانت بتتنفس عادي."],"tips":["ماتنزلش وسطك لتحت، وماترفعوش لفوق."],"enHow":["Get into a prone position on the floor, supporting your weight on your toes and your forearms. Your arms are bent and directly below the shoulder.","Keep your body straight at all times, and hold this position as long as possible. To increase difficulty, an arm or leg can be raised."],"muscles":["abdominals"],"similar":false,"muscles2":[],"yq":"Plank how to use","vid":{"id":"mwlp75MS6Rg","t":0,"title":"How to do a Plank","ch":"NASM","dur":"0:15","official":false},"photo":"https://i.ytimg.com/vi/mwlp75MS6Rg/hqdefault.jpg","pkind":"v"},{"id":"air_bike","name":"إير بايك","en":"Air Bike","group":"cardio","slot":"cardio","type":"cardio","seen":"10:44","compound":false,"lvl":0,"avoid":[],"cardio":true,"setup":["ظبّط الكرسي بحيث رجلك تبقى شبه مفرودة تحت."],"how":["بدّل بين 30 ثانية سريع و60 ثانية هادي.","الإيدين بيزقوا ويشدوا مع الرجل."],"tips":["أحسن كارديو لحرق الدهون في وقت قليل."],"enHow":["To begin, seat yourself on the bike and adjust the seat to your height.","Select the desired option from the menu. You may have to start pedaling to turn it on. You can use the manual setting, or you can select a program to use. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. The level of resistance can be changed throughout the workout. The handles can be used to monitor your heart rate to help you stay at an appropriate intensity."],"muscles":["quadriceps"],"similar":true,"muscles2":["calves","glutes","hamstrings"],"yq":"air bike assault bike how to use","vid":{"id":"KC-ZSfOmXgE","t":0,"title":"How to Use the Air Bike","ch":"Nutrition Warehouse","dur":"0:55","official":false},"photo":"https://i.ytimg.com/vi/KC-ZSfOmXgE/hqdefault.jpg","pkind":"v"},{"id":"incline_walk","name":"مشي على مشاية بميل","en":"Treadmill Incline Walk","group":"cardio","slot":"cardio","type":"cardio","seen":"10:40","compound":false,"lvl":0,"avoid":[],"cardio":true,"setup":["ميل 8–12% وسرعة 4.5–5.5 كم/س."],"how":["امشي من غير ما تمسك المشاية.","لازم تقدر تتكلم بس تكون بتنهج شوية."],"tips":["خفيف على الركبة ومفيد جدًا في التنشيف."],"enHow":["To begin, step onto the treadmill and select the desired option from the menu. Most treadmills have a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. Elevation can be adjusted to change the intensity of the workout.","Treadmills offer convenience, cardiovascular benefits, and usually have less impact than walking outside. When walking, you should move at a moderate to fast pace, not a leisurely one. Being an activity of lower intensity, walking doesn't burn as many calories as some other activities, but still provides great benefit. A 150 lb person will burn about 175 calories walking 4 miles per hour for 30 minutes, compared to 450 calories running twice as fast. Maintain proper posture as you walk, and only hold onto the handles when necessary, such as when dismounting or checking your heart rate."],"muscles":["quadriceps"],"similar":true,"muscles2":["calves","glutes","hamstrings"],"yq":"incline treadmill walk how to use","vid":{"id":"9ccVxEvWtpA","t":0,"title":"How to Properly Walk on Incline","ch":"VIVE Health","dur":"0:45","official":false},"photo":"https://i.ytimg.com/vi/9ccVxEvWtpA/hqdefault.jpg","pkind":"v"}];
+
+{
+const SIMILAR = new Set(['lateral_raise', 'assisted_pullup', 'belt_squat', 'kneeling_leg_curl', 'standing_hip_thrust', 'pendulum_squat', 'air_bike', 'hip_thrust']);
+const EXM = Object.fromEntries(EX.map(e => [e.id, e]));
+const KEY = 'double_aa_v3';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+
+// ================= i18n =================
+const T = {
+  ar: {
+    brand: 'Double AA', tag: 'من غير أعذار', sub: 'برنامج على أجهزة الجيم بتاعك بالظبط، ليك وللي بيتمرّن معاك.',
+    who: 'مين هيتمرّن؟', whoHint: 'كل واحد ليه ملف لوحده: برنامجه وأوزانه وتقدّمه.', name: 'الاسم', namePh: 'اكتب الاسم', addP: '+ ضيف شخص', profiles: 'الأشخاص', switchTo: 'بدّل لـ',
+    goal: 'هدفك', goalHint: 'تقدر تختار هدفين مع بعض.', level: 'مستواك', days: 'أيام في الأسبوع', len: 'مدة التمرين', inj: 'وجع أو إصابة؟', injHint: 'هنشيل التمارين اللي بتضغط على المكان ده.', cardio: 'كارديو في الآخر', yes: 'أيوه', no: 'لأ',
+    target: 'الوزن المستهدف (اختياري)', kgPh: 'مثلًا 65',
+    start: 'يلا بينا', save: 'احفظ', reset: 'امسح بيانات الشخص ده', settings: 'الإعدادات', lang: 'اللغة',
+    disc: 'التطبيق للإرشاد بس. لو حسيت بوجع حاد، وقّف فورًا وارجع لدكتور أو أخصائي علاج طبيعي.',
+    nav: { today: 'النهارده', plan: 'البرنامج', lib: 'الأجهزة', prog: 'التقدم', set: 'إعدادات' },
+    week: 'الأسبوع ده', day: 'يوم', warm: 'إحماء 5 د: مشي أو بايك خفيف، وبعدين مجموعة خفيفة بنص الوزن قبل أول تمرين.',
+    startW: 'ابدأ التمرين', finish: 'خلّصت التمرين', cancel: 'إلغاء التمرين', rest: 'راحة', sec: 'ث', min: 'د', skip: 'تخطّي',
+    set: 'مجموعة', kg: 'كجم', reps: 'عدّات', secs: 'ثواني', mins: 'دقايق', addSet: '+ مجموعة', rmSet: '− مجموعة',
+    swap: 'بدّل بتمرين تاني لنفس العضلة', how: 'إزاي تلعبه', setup: 'التظبيط', move: 'الحركة', tips: 'خد بالك', yourMachine: 'الجهاز', inGym: 'في الجيم بتاعك:', demoLbl: 'الحركة الصح', muscles: 'العضلات',
+    ph1: 'شد العضلة • ثانية', ph2: 'ارجع ببطء • 2 ثانية', startPos: 'البداية', endPos: 'النهاية', similar: 'الصورة لحركة مشابهة على جهاز تاني. جهازك بالظبط في تاب «الجهاز».', yt: 'شوف فيديو للحركة على يوتيوب', vidT: 'فيديو', official: 'فيديو رسمي من الشركة', openYt: 'افتح في يوتيوب', main: 'أساسية', help: 'مساعدة', front: 'قدام', backv: 'ورا',
+    seen: 'في الفيديو', last: 'آخر مرة', up: 'زوّد لـ', keep: 'حاول توصل لأعلى عدد عدّات',
+    planT: 'البرنامج', planHint: 'مفيش أيام ثابتة. كل ما تخلّص يوم، اللي بعده يبقى جاهز. ولو تقدر، سيب يوم راحة بعد كل يومين تمرين ورا بعض.', next: 'الجاي', open: 'افتح اليوم', rotate: 'التمارين بتتغير لوحدها كل 4 أسابيع. وتقدر تبدّل أي تمرين بإيدك.',
+    libT: 'الأجهزة', libSub: n => `${n} تمرين على أجهزة الجيم بتاعك`, all: 'الكل', back: 'رجوع', alts: 'بدايل لنفس العضلة',
+    progT: 'التقدم', total: 'تمرين كلهم', thisWeek: 'الأسبوع ده', logged: 'تمرين متسجّل', best: 'أعلى وزن شِلته', recent: 'آخر التمارين', empty: 'لسه مفيش. ابدأ أول تمرين من «النهارده».',
+    bw: 'وزن الجسم', bwAdd: 'سجّل', bwPh: 'وزنك النهارده', bwLeft: n => `فاضل ${n} كجم على هدفك`, bwDone: 'وصلت لهدفك! 🔥', bwChange: n => `${n > 0 ? '+' : ''}${n} كجم من أول وزن`,
+    swapT: n => `بدّل «${n}»`, notAvail: 'مش متاحين حسب الإعدادات:', close: 'قفل',
+    qReset: 'هتمسح كل بيانات الشخص ده. متأكد؟', qBusy: 'عندك تمرين شغال. خلّصه أو ألغيه الأول.', qEmpty: 'مفيش ولا مجموعة متعلّم عليها. تخلّص برضه؟', qCancel: 'تلغي التمرين؟ مش هيتسجّل.', ok: 'تمام', toast: 'عاش يا وحش! التمرين اتسجّل 🔥', needName: 'اكتب الاسم الأول', delP: 'امسح الشخص ده', qDel: n => `تمسح ملف «${n}» بكل بياناته؟`,
+    interval: 'إنترفال: 30ث سريع + 60ث هادي', easy: 'هادي، كختام', incline: 'ميل 8–12% • سرعة 4.5–5.5', fitNote: 'إنترفال: 40ث جامد + 20ث راحة',
+    split: { 2: 'فول بادي • يومين', 3: 'فول بادي • 3 أيام', 4: 'أبر / لوار • 4 أيام', 5: 'أبر / لوار + PPL • 5 أيام', 6: 'بوش / بول / ليجز • 6 أيام' },
+    goals: { muscle: ['بناء عضل', 'حجم وقوة'], loss: ['خسارة وزن', 'حرق دهون'], fit: ['فيتنس', 'لياقة ونَفَس'] },
+    levels: { b: ['مبتدئ', 'أقل من 6 شهور'], i: ['متوسط', '6 شهور لسنتين'], a: ['متقدم', 'أكتر من سنتين'] },
+    lens: { 45: '45 د', 60: '60 د', 75: '75 د', 90: '90 د' },
+    injs: { lowerback: 'أسفل الضهر', knee: 'الركبة', shoulder: 'الكتف' },
+    groups: { chest: 'صدر', back: 'ضهر', shoulders: 'كتف', biceps: 'باي', triceps: 'تراي', quads: 'رجل أمامي', hams: 'رجل خلفي', glutes: 'مؤخرة', core: 'بطن', cardio: 'كارديو' },
+    mus: { chest: 'صدر', shoulders: 'كتف', triceps: 'تراي', lats: 'ضهر عريض', biceps: 'باي', 'middle back': 'نص الضهر', abdominals: 'بطن', forearms: 'ساعد', 'lower back': 'أسفل الضهر', glutes: 'مؤخرة', hamstrings: 'خلفية الفخد', quadriceps: 'أمامية الفخد', calves: 'سمانة', abductors: 'جانب الحوض', adductors: 'الفخد الداخلي' },
+    dayT: { upper_a: 'أبر بادي A', lower_a: 'رجل A', upper_b: 'أبر بادي B', lower_b: 'رجل B', full_a: 'فول بادي A', full_b: 'فول بادي B', full_c: 'فول بادي C', push: 'بوش', pull: 'بول', legs: 'رجل' },
+    dayM: { upper_a: 'صدر • ضهر • كتف • دراع', lower_a: 'أمامي • خلفي • مؤخرة', upper_b: 'صدر علوي • ضهر • كتف • دراع', lower_b: 'خلفي • مؤخرة • أمامي', full_a: 'جسم كامل', full_b: 'جسم كامل', full_c: 'جسم كامل', push: 'صدر • كتف • تراي', pull: 'ضهر • كتف خلفي • باي', legs: 'رجل كاملة • بطن' },
+  },
+  en: {
+    brand: 'Double AA', tag: 'NO EXCUSES', sub: 'A program on the exact machines in your gym, for you and whoever trains with you.',
+    who: 'Who’s training?', whoHint: 'Everyone gets their own profile: program, weights and progress.', name: 'Name', namePh: 'Type a name', addP: '+ Add person', profiles: 'People', switchTo: 'Switch to',
+    goal: 'Your goal', goalHint: 'You can pick two goals together.', level: 'Your level', days: 'Days per week', len: 'Session length', inj: 'Any pain or injury?', injHint: "We'll remove exercises that stress that area.", cardio: 'Cardio finisher', yes: 'Yes', no: 'No',
+    target: 'Target weight (optional)', kgPh: 'e.g. 65',
+    start: 'Let’s go', save: 'Save', reset: 'Erase this person’s data', settings: 'Settings', lang: 'Language',
+    disc: 'For guidance only. If you feel sharp pain, stop and see a doctor or physiotherapist.',
+    nav: { today: 'Today', plan: 'Plan', lib: 'Machines', prog: 'Progress', set: 'Settings' },
+    week: 'This week', day: 'Day', warm: 'Warm-up 5 min: easy walk or bike, then one light set at half weight before the first exercise.',
+    startW: 'Start workout', finish: 'Finish workout', cancel: 'Cancel workout', rest: 'Rest', sec: 's', min: 'min', skip: 'Skip',
+    set: 'Set', kg: 'kg', reps: 'Reps', secs: 'Secs', mins: 'Min', addSet: '+ Set', rmSet: '− Set',
+    swap: 'Swap for another exercise, same muscle', how: 'How to do it', setup: 'Setup', move: 'Movement', tips: 'Watch out', yourMachine: 'Machine', inGym: 'In your gym:', demoLbl: 'Correct form', muscles: 'Muscles',
+    ph1: 'Squeeze • 1 sec', ph2: 'Lower slowly • 2 sec', startPos: 'Start', endPos: 'Finish', similar: 'Photo shows a similar movement on a different machine. Your exact machine is under “Your machine”.', yt: 'Watch a video on YouTube', vidT: 'Video', official: 'Official manufacturer video', openYt: 'Open in YouTube', main: 'Main', help: 'Assist', front: 'Front', backv: 'Back',
+    seen: 'in video', last: 'Last time', up: 'Go up to', keep: 'Aim for the top of the rep range',
+    planT: 'Plan', planHint: 'No fixed weekdays. Finish a day and the next one is ready. Try to rest one day after two days in a row.', next: 'Next', open: 'Open day', rotate: 'Exercises rotate every 4 weeks automatically. You can swap any exercise yourself.',
+    libT: 'Machines', libSub: n => `${n} exercises on your gym’s machines`, all: 'All', back: 'Back', alts: 'Alternatives, same muscle',
+    progT: 'Progress', total: 'Total workouts', thisWeek: 'This week', logged: 'Exercises logged', best: 'Best lifts', recent: 'Recent workouts', empty: 'Nothing yet. Start your first workout from Today.',
+    bw: 'Body weight', bwAdd: 'Log', bwPh: 'Today’s weight', bwLeft: n => `${n} kg to your target`, bwDone: 'Target reached! 🔥', bwChange: n => `${n > 0 ? '+' : ''}${n} kg since first entry`,
+    swapT: n => `Swap “${n}”`, notAvail: 'Not available with these settings:', close: 'Close',
+    qReset: 'Erase all of this person’s data. Sure?', qBusy: 'You have a workout running. Finish or cancel it first.', qEmpty: 'No sets checked. Finish anyway?', qCancel: 'Cancel this workout? It won’t be saved.', ok: 'OK', toast: 'Beast mode! Workout saved 🔥', needName: 'Type a name first', delP: 'Delete this person', qDel: n => `Delete “${n}” and all their data?`,
+    interval: 'Intervals: 30s hard + 60s easy', easy: 'Easy, as a cool-down', incline: 'Incline 8–12% • 4.5–5.5 km/h', fitNote: 'Intervals: 40s hard + 20s rest',
+    split: { 2: 'Full body • 2 days', 3: 'Full body • 3 days', 4: 'Upper / Lower • 4 days', 5: 'Upper / Lower + PPL • 5 days', 6: 'Push / Pull / Legs • 6 days' },
+    goals: { muscle: ['Build muscle', 'Size & strength'], loss: ['Lose weight', 'Burn fat'], fit: ['Fitness', 'Stamina & conditioning'] },
+    levels: { b: ['Beginner', 'Under 6 months'], i: ['Intermediate', '6 months – 2 years'], a: ['Advanced', '2+ years'] },
+    lens: { 45: '45 min', 60: '60 min', 75: '75 min', 90: '90 min' },
+    injs: { lowerback: 'Lower back', knee: 'Knee', shoulder: 'Shoulder' },
+    groups: { chest: 'Chest', back: 'Back', shoulders: 'Shoulders', biceps: 'Biceps', triceps: 'Triceps', quads: 'Quads', hams: 'Hamstrings', glutes: 'Glutes', core: 'Core', cardio: 'Cardio' },
+    mus: { chest: 'Chest', shoulders: 'Shoulders', triceps: 'Triceps', lats: 'Lats', biceps: 'Biceps', 'middle back': 'Mid back', abdominals: 'Abs', forearms: 'Forearms', 'lower back': 'Lower back', glutes: 'Glutes', hamstrings: 'Hamstrings', quadriceps: 'Quads', calves: 'Calves', abductors: 'Outer hip', adductors: 'Inner thigh' },
+    dayT: { upper_a: 'Upper A', lower_a: 'Legs A', upper_b: 'Upper B', lower_b: 'Legs B', full_a: 'Full Body A', full_b: 'Full Body B', full_c: 'Full Body C', push: 'Push', pull: 'Pull', legs: 'Legs' },
+    dayM: { upper_a: 'Chest • Back • Shoulders • Arms', lower_a: 'Quads • Hams • Glutes', upper_b: 'Upper chest • Back • Shoulders • Arms', lower_b: 'Hams • Glutes • Quads', full_a: 'Full body', full_b: 'Full body', full_c: 'Full body', push: 'Chest • Shoulders • Triceps', pull: 'Back • Rear delts • Biceps', legs: 'Legs • Core' },
+  }
+};
+
+// ================= storage (profiles) =================
+let mem = null;
+const newProfile = name => ({ id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name, settings: null, rot: 0, logs: [], swaps: {}, active: null, start: Date.now(), weights: [] });
+function R() {
+  if (mem) return mem;
+  try { mem = JSON.parse(localStorage.getItem(KEY)); } catch (e) { mem = null; }
+  if (!mem || !Array.isArray(mem.profiles)) mem = { lang: 'ar', cur: 0, profiles: [] };
+  return mem;
+}
+const S = () => R().profiles[R().cur] || null;
+function save() { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { } }
+const L = () => T[R().lang || 'ar'];
+const isEn = () => R().lang === 'en';
+const nm = e => isEn() ? e.en : e.name;
+const nm2 = e => isEn() ? e.name : e.en;
+function applyLang() { const en = isEn(); document.documentElement.lang = en ? 'en' : 'ar'; document.documentElement.dir = en ? 'ltr' : 'rtl'; }
+
+// ================= program =================
+const DEFAULTS = { goals: ['muscle', 'fit'], level: 'b', days: 4, len: 60, inj: [], cardio: true, target: null };
+const DAYS = {
+  upper_a: ['chest_h', 'back_v', 'sh_press', 'back_h', 'chest_fly', 'sh_lat', 'bi', 'tri'],
+  lower_a: ['quad_main', 'ham', 'quad_iso', 'glute', 'add', 'calf', 'core'],
+  upper_b: ['chest_inc', 'back_h', 'back_v', 'sh_lat', 'sh_rear', 'tri', 'bi', 'core'],
+  lower_b: ['glute', 'quad_main', 'ham', 'hinge', 'abd', 'calf', 'core'],
+  full_a: ['quad_main', 'chest_h', 'back_v', 'ham', 'sh_lat', 'tri', 'core'],
+  full_b: ['glute', 'chest_inc', 'back_h', 'quad_iso', 'sh_rear', 'bi', 'core'],
+  full_c: ['quad_main', 'sh_press', 'back_v', 'chest_fly', 'ham', 'abd', 'core'],
+  push: ['chest_h', 'chest_inc', 'sh_press', 'chest_fly', 'sh_lat', 'tri', 'tri'],
+  pull: ['back_v', 'back_h', 'back_h', 'sh_rear', 'bi', 'bi', 'core'],
+  legs: ['quad_main', 'ham', 'quad_iso', 'glute', 'add', 'calf', 'core'],
+};
+const SPLITS = { 2: ['full_a', 'full_b'], 3: ['full_a', 'full_b', 'full_c'], 4: ['upper_a', 'lower_a', 'upper_b', 'lower_b'], 5: ['upper_a', 'lower_a', 'push', 'pull', 'legs'], 6: ['push', 'pull', 'legs', 'push', 'pull', 'legs'] };
+const COUNT = { 45: 5, 60: 6, 75: 7, 90: 8 };
+const weekNum = () => Math.floor((Date.now() - (S().start || Date.now())) / (7 * 864e5));
+const candidates = (slot, st) => EX.filter(e => e.slot === slot && !(e.avoid || []).some(a => st.inj.includes(a)) && (st.level !== 'b' || e.lvl === 0));
+const G = st => { const g = st.goals || ['muscle']; return { m: g.includes('muscle'), l: g.includes('loss'), f: g.includes('fit') }; };
+
+function buildProgram(st) {
+  const used = {}, wk = Math.floor(weekNum() / 4), g = G(st);
+  return SPLITS[st.days].map((k, di) => {
+    const n = COUNT[st.len] || 6; let slots = DAYS[k].slice(0, n);
+    if (!slots.includes('core') && n >= 6 && DAYS[k].includes('core')) slots[slots.length - 1] = 'core';
+    const items = [], taken = new Set();
+    slots.forEach((slot, si) => {
+      const c = candidates(slot, st).filter(e => !taken.has(e.id)); if (!c.length) return;
+      used[slot] = used[slot] || 0;
+      let ex = c[(used[slot] + wk + (st.days === 6 && di >= 3 ? 1 : 0)) % c.length]; used[slot]++;
+      const sw = S().swaps[`${di}:${si}`]; if (sw && EXM[sw] && !taken.has(sw)) ex = EXM[sw];
+      taken.add(ex.id); items.push({ id: ex.id, slot, si });
+    });
+    if (st.cardio) {
+      const id = (g.l && !g.f) ? (di % 2 === 0 ? 'incline_walk' : 'air_bike') : (di % 2 === 0 ? 'air_bike' : 'incline_walk');
+      items.push({ id, slot: 'cardio', si: 99 });
+    }
+    return { key: k, di, items };
+  });
+}
+function prescribe(ex, st) {
+  const t = L(), g = G(st);
+  if (ex.cardio) {
+    const bike = ex.id === 'air_bike';
+    let mins, note;
+    if (g.l) { mins = bike ? 15 : 25; note = bike ? t.interval : t.incline; }
+    else if (g.f) { mins = bike ? 12 : 15; note = bike ? t.fitNote : t.incline; }
+    else { mins = bike ? 8 : 10; note = t.easy; }
+    if (st.len <= 45) mins = Math.round(mins * 0.7);
+    return { sets: 1, reps: `${mins} ${t.min}`, rest: 0, note, cardio: true, mins };
+  }
+  if (ex.timed) return { sets: 3, reps: st.level === 'b' ? `20–30${t.sec}` : `40–60${t.sec}`, rest: 45, timed: true, hi: st.level === 'b' ? 30 : 60 };
+  const c = ex.compound; let P;
+  if (g.m && !g.l) P = g.f ? (c ? [4, 8, 12, 90] : [3, 10, 15, 60]) : (c ? [4, 6, 10, 120] : [3, 10, 15, 75]);
+  else if (g.m && g.l) P = c ? [3, 8, 12, 90] : [3, 12, 15, 60];
+  else if (g.l) P = c ? [3, 10, 12, g.f ? 60 : 75] : [3, 12, 15, 45];
+  else P = c ? [3, 10, 12, 60] : [3, 12, 15, 45];
+  const sets = st.level === 'b' ? Math.min(P[0], 3) : P[0];
+  return { sets, lo: P[1], hi: P[2], reps: `${P[1]}–${P[2]}`, rest: P[3] };
+}
+function history(id) { const o = []; for (const l of S().logs) { const it = l.items.find(i => i.id === id); if (it && it.sets.some(s => s.done)) o.push({ ts: l.ts, sets: it.sets.filter(s => s.done) }); } return o; }
+function suggest(ex, pr) {
+  if (pr.cardio || pr.timed) return null; const h = history(ex.id); if (!h.length) return null;
+  const last = h[h.length - 1].sets; const w = Math.max(...last.map(s => +s.w || 0)); if (!w) return null;
+  const allTop = last.length >= pr.sets && last.every(s => (+s.r || 0) >= pr.hi);
+  const inc = ['quads', 'hams', 'glutes'].includes(ex.group) ? 5 : 2.5;
+  return { w, r: last.filter(s => +s.w === w).map(s => s.r).join(' / '), next: allTop ? w + inc : w, up: allTop };
+}
+
+// ================= assets =================
+const MARK = `<svg class="mark" viewBox="0 0 126 64"><g transform="skewX(-12)"><path d="M14 60 L34 4 H46 L66 60 H53 L49 47 H31 L27 60Z M34 37 H46 L40 18Z" fill="currentColor"/><path d="M60 60 L80 4 H92 L112 60 H99 L95 47 H77 L73 60Z M80 37 H92 L86 18Z" fill="currentColor"/></g><rect x="0" y="28" width="122" height="6" fill="var(--red)" transform="skewX(-12) translate(6,0)"/></svg>`;
+const LOGO = `<span class="logo"><small>DOUBLE</small>${MARK}</span>`;
+const IC = {
+  today: '<path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/>',
+  plan: '<rect x="3.5" y="4.5" width="17" height="16" rx="1"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/>',
+  lib: '<path d="M4 20V8l4-4h12v16zM8 4v4H4"/><path d="M9 12h7M9 16h5"/>',
+  prog: '<path d="M3 20h18M5 16l5-6 4 3 6-8"/>',
+  set: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+};
+
+// ---- muscle map (front + back) ----
+const MAP_F = [
+  ['shoulders', 'e', 29, 41, 8, 7], ['shoulders', 'e', 71, 41, 8, 7],
+  ['chest', 'p', 'M49 35 L37 36 Q31 44 35 55 Q43 58 49 55Z'], ['chest', 'p', 'M51 35 L63 36 Q69 44 65 55 Q57 58 51 55Z'],
+  ['biceps', 'e', 25, 58, 5, 11], ['biceps', 'e', 75, 58, 5, 11],
+  ['forearms', 'e', 21, 84, 4.5, 12], ['forearms', 'e', 79, 84, 4.5, 12],
+  ['abdominals', 'p', 'M42 59 H58 V92 Q50 97 42 92Z'], ['abdominals', 'p', 'M36 60 L41 60 L41 90 L37 86Z'], ['abdominals', 'p', 'M64 60 L59 60 L59 90 L63 86Z'],
+  ['abductors', 'e', 33, 101, 4, 8], ['abductors', 'e', 67, 101, 4, 8],
+  ['quadriceps', 'e', 40.5, 124, 7.5, 20], ['quadriceps', 'e', 59.5, 124, 7.5, 20],
+  ['adductors', 'e', 47.2, 112, 2.6, 11], ['adductors', 'e', 52.8, 112, 2.6, 11],
+  ['calves', 'e', 40, 166, 5, 15], ['calves', 'e', 60, 166, 5, 15],
+];
+const MAP_B = [
+  ['middle back', 'p', 'M50 27 L38 38 L50 52 L62 38Z'],
+  ['shoulders', 'e', 29, 41, 8, 7], ['shoulders', 'e', 71, 41, 8, 7],
+  ['lats', 'p', 'M40 46 Q31 58 39 80 L47 72 L47 52Z'], ['lats', 'p', 'M60 46 Q69 58 61 80 L53 72 L53 52Z'],
+  ['lower back', 'p', 'M43 76 H57 V92 H43Z'],
+  ['triceps', 'e', 25, 58, 5, 11], ['triceps', 'e', 75, 58, 5, 11],
+  ['forearms', 'e', 21, 84, 4.5, 12], ['forearms', 'e', 79, 84, 4.5, 12],
+  ['glutes', 'e', 42, 103, 8.5, 9], ['glutes', 'e', 58, 103, 8.5, 9],
+  ['hamstrings', 'e', 41, 132, 7, 17], ['hamstrings', 'e', 59, 132, 7, 17],
+  ['calves', 'e', 40, 166, 5.5, 13], ['calves', 'e', 60, 166, 5.5, 13],
+];
+const SIL = `<circle cx="50" cy="15" r="9"/><rect x="45" y="22" width="10" height="9"/><path d="M33 33 Q50 28 67 33 L72 60 L66 96 L62 108 L38 108 L34 96 L28 60Z"/><path d="M22 36 L30 34 L30 70 L26 98 L17 98 L18 70Z"/><path d="M78 36 L70 34 L70 70 L74 98 L83 98 L82 70Z"/><path d="M34 100 L49 104 L47 184 L35 184 L32 140Z"/><path d="M66 100 L51 104 L53 184 L65 184 L68 140Z"/>`;
+function muscleSvg(map, ex) {
+  const p = new Set(ex.muscles), s = new Set(ex.muscles2);
+  const sh = map.map(([m, k, ...a]) => { const c = p.has(m) ? 'm1' : s.has(m) ? 'm2' : 'm0'; return k === 'e' ? `<ellipse class="${c}" cx="${a[0]}" cy="${a[1]}" rx="${a[2]}" ry="${a[3]}"/>` : `<path class="${c}" d="${a[0]}"/>`; }).join('');
+  return `<svg viewBox="0 0 100 190" class="bfig"><g class="sil">${SIL}</g>${sh}</svg>`;
+}
+function musclesBlock(ex) {
+  const t = L();
+  const tag = (m, c) => `<span class="${c}">${t.mus[m] || m}</span>`;
+  return `<div class="mmap"><div class="figs"><figure>${muscleSvg(MAP_F, ex)}<figcaption>${t.front}</figcaption></figure><figure>${muscleSvg(MAP_B, ex)}<figcaption>${t.backv}</figcaption></figure></div>
+    <div class="mlist"><h4>${t.muscles}</h4><div>${ex.muscles.map(m => tag(m, 'p1')).join('')}${ex.muscles2.map(m => tag(m, 'p2')).join('')}</div><p class="leg"><i class="p1"></i>${t.main} <i class="p2"></i>${t.help}</p></div></div>`;
+}
+
+// ================= UI state =================
+let tab = 'today', libGroup = 'all', viewDay = null, openEx = null, draft = null, mediaTab = 'vid';
+const app = () => $('#app');
+function nav() { return `<nav class="nav">${Object.keys(IC).map(k => `<button class="${tab === k || (k === 'lib' && tab.startsWith('ex:')) ? 'on' : ''}" data-a="tab" data-v="${k}"><svg viewBox="0 0 24 24">${IC[k]}</svg><span>${L().nav[k]}</span></button>`).join('')}</nav>`; }
+const chip = (label, on, a, v) => `<button class="chip ${on ? 'on' : ''}" data-a="${a}" data-v="${v}">${label}</button>`;
+const profBar = () => { const r = R(); if (r.profiles.length < 2) return ''; return `<div class="pbar">${r.profiles.map((p, i) => `<button class="${i === r.cur ? 'on' : ''}" data-a="prof" data-v="${i}"><span>${esc(p.name.slice(0, 1))}</span>${esc(p.name)}</button>`).join('')}</div>`; };
+
+// ================= settings / onboarding =================
+function renderSettings(mode) { // mode: 'first' | 'new' | 'edit'
+  const t = L(), cur = S();
+  if (!draft) draft = mode === 'edit' && cur ? { ...JSON.parse(JSON.stringify(cur.settings)), name: cur.name } : { ...JSON.parse(JSON.stringify(DEFAULTS)), name: '' };
+  const st = draft;
+  const big = (obj, cur, a, multi) => Object.entries(obj).map(([v, [l, d]]) => `<button class="opt ${(multi ? cur.includes(v) : String(cur) === v) ? 'on' : ''}" data-a="${a}" data-v="${v}"><b>${l}</b><span>${d}</span></button>`).join('');
+  const langSw = `<div class="langsw">${chip('عربي', !isEn(), 'lang', 'ar')}${chip('English', isEn(), 'lang', 'en')}</div>`;
+  const r = R();
+  const people = mode === 'edit' ? `<div class="field"><label>${t.profiles}</label><div class="plist">${r.profiles.map((p, i) => `<button class="${i === r.cur ? 'on' : ''}" data-a="prof" data-v="${i}"><span>${esc(p.name.slice(0, 1))}</span>${esc(p.name)}</button>`).join('')}<button class="padd" data-a="add-prof">${t.addP}</button></div></div>` : '';
+  const head = mode === 'first'
+    ? `<header class="intro"><div class="intro-bg" style="background-image:url(gym/hero0.jpg)"></div><div class="intro-in">${langSw}${LOGO}<h1 class="disp">${t.tag}</h1><p>${t.sub}</p></div></header>`
+    : `<div class="page"><h1 class="ttl">${mode === 'new' ? t.addP.replace('+ ', '') : t.settings}</h1>${mode === 'edit' ? `<div class="field"><label>${t.lang}</label>${langSw}</div>${people}` : ''}</div>`;
+  app().innerHTML = `${head}
+  <div class="page form">
+    <div class="field"><label><i>01</i>${mode === 'edit' ? t.name : t.who}</label><input class="tin" id="pname" maxlength="20" value="${esc(st.name)}" placeholder="${t.namePh}">${mode !== 'edit' ? `<p class="hint">${t.whoHint}</p>` : ''}</div>
+    <div class="field"><label><i>02</i>${t.goal}</label><div class="opts three">${big(t.goals, st.goals, 'set-goal', true)}</div><p class="hint">${t.goalHint}</p></div>
+    <div class="field"><label><i>03</i>${t.level}</label><div class="opts three">${big(t.levels, st.level, 'set-level')}</div></div>
+    <div class="field"><label><i>04</i>${t.days}</label><div class="seg">${[2, 3, 4, 5, 6].map(d => chip(d, st.days === d, 'set-days', d)).join('')}</div><p class="hint">${t.split[st.days]}</p></div>
+    <div class="field"><label><i>05</i>${t.len}</label><div class="seg">${Object.entries(t.lens).map(([v, l]) => chip(l, st.len === +v, 'set-len', v)).join('')}</div></div>
+    <div class="field"><label><i>06</i>${t.inj}</label><div class="chips">${Object.entries(t.injs).map(([v, l]) => chip(l, st.inj.includes(v), 'set-inj', v)).join('')}</div><p class="hint">${t.injHint}</p></div>
+    <div class="field"><label><i>07</i>${t.cardio}</label><div class="seg">${chip(t.yes, st.cardio, 'set-cardio', 1)}${chip(t.no, !st.cardio, 'set-cardio', 0)}</div></div>
+    ${st.goals.includes('loss') ? `<div class="field"><label><i>08</i>${t.target}</label><input class="tin" id="ptarget" inputmode="decimal" value="${st.target ?? ''}" placeholder="${t.kgPh}"></div>` : ''}
+    <button class="btn" data-a="save-settings" data-v="${mode}">${mode === 'edit' ? t.save : t.start}</button>
+    ${mode === 'new' ? `<button class="btn ghost" data-a="tab" data-v="set">${t.close}</button>` : ''}
+    ${mode === 'edit' ? `<button class="btn ghost danger" data-a="reset">${t.reset}</button>${r.profiles.length > 1 ? `<button class="btn ghost danger" data-a="del-prof">${t.delP}</button>` : ''}` : ''}
+    <p class="disc">${t.disc}</p>
+  </div>${mode === 'first' ? '' : nav()}`;
+}
+function syncDraftInputs() { const n = $('#pname'); if (n && draft) draft.name = n.value; const tg = $('#ptarget'); if (tg && draft) draft.target = tg.value === '' ? null : +tg.value.replace(',', '.'); }
+
+// ================= media (demo player / your machine / muscles) =================
+const ytUrl = ex => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ex.yq || ex.en);
+const pimg = (e, cls = '', extra = '') => `<img class="${e.pkind === 'p' ? 'prod ' : ''}${cls}" src="${e.photo || 'gym/' + e.id + '.jpg'}" alt="" loading="lazy" ${extra} onerror="this.onerror=null;this.classList.remove('prod');this.src='gym/${e.id}.jpg'">`;
+const vurl = v => `https://www.youtube.com/watch?v=${v.id}${v.t ? '&t=' + v.t + 's' : ''}`;
+function vidBlock(ex) {
+  const t = L(), v = ex.vid; if (!v) return '';
+  return `<div class="vbox" data-a="play" data-v="${v.id}" data-t="${v.t || 0}"><img src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="" onerror="this.onerror=null;this.src='demo/${ex.id}_1.jpg'"><span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+    <div class="vmeta"><b>${esc(v.title)}</b><span>${esc(v.ch)} • ${v.dur}${v.official ? ` • <i>${t.official}</i>` : ''}</span></div></div>
+    <a class="vlink" href="${vurl(v)}" target="_blank" rel="noopener">${t.openYt} ↗</a>`;
+}
+function mediaBlock(ex) {
+  const t = L(); if (mediaTab === 'vid' && !ex.vid) mediaTab = 'vid'; const mt = mediaTab;
+  return `<div class="media">
+    <div class="tabs">${[...(ex.vid ? [['vid', t.vidT]] : []), ['demo', t.demoLbl], ['gym', t.yourMachine], ['mus', t.muscles]].map(([k, l]) => `<button class="${mt === k ? 'on' : ''}" data-a="mtab" data-v="${k}">${l}</button>`).join('')}</div>
+    ${ex.vid ? `<div class="mt mt-vid" ${mt === 'vid' ? '' : 'hidden'}>${vidBlock(ex)}</div>` : ''}
+    <div class="mt mt-demo" ${mt === 'demo' ? '' : 'hidden'}>
+      <div class="player"><img src="demo/${ex.id}_0.jpg" alt=""><img class="b" src="demo/${ex.id}_1.jpg" alt="">
+        <div class="cap"><span class="c1">① ${t.ph1}</span><span class="c2">② ${t.ph2}</span></div>
+        <div class="pos"><b class="s">${t.startPos}</b><b class="e">${t.endPos}</b></div><div class="bar"><i></i></div></div>
+      ${SIMILAR.has(ex.id) ? `<p class="note-s">${t.similar}</p>` : ''}
+      <a class="yt" href="${ytUrl(ex)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M10 8.5v7l6-3.5z"/></svg>${t.yt}</a>
+    </div>
+    <div class="mt mt-gym" ${mt === 'gym' ? '' : 'hidden'}>${ex.photo ? `<div class="offshot ${ex.pkind === 'p' ? 'white' : ''}">${pimg(ex)}${ex.model ? `<span class="mdl">${esc(ex.model)}</span>` : ''}</div><p class="sublbl">${t.inGym}</p>` : ''}<div class="gymshot ${ex.photo ? 'small' : ''}"><img src="gym/${ex.id}.jpg" alt="">${ex.seen ? `<span class="ts">${t.seen} ${ex.seen}</span>` : ''}</div><a class="yt" href="${ytUrl(ex)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M10 8.5v7l6-3.5z"/></svg>${t.yt}</a></div>
+    <div class="mt mt-mus" ${mt === 'mus' ? '' : 'hidden'}>${musclesBlock(ex)}</div>
+  </div>`;
+}
+function howBlock(ex) {
+  const t = L(), li = a => a.map(x => `<li>${esc(x)}</li>`).join('');
+  if (isEn()) return `<div class="how"><h4>${t.how}</h4><ol>${li(ex.enHow)}</ol></div>`;
+  return `<div class="how"><h4>${t.setup}</h4><ul>${li(ex.setup)}</ul><h4>${t.move}</h4><ol>${li(ex.how)}</ol><h4>${t.tips}</h4><ul class="tips">${li(ex.tips)}</ul></div>`;
+}
+
+// ================= today =================
+function currentDay(prog) { const st = S(); if (st.active) return prog[st.active.di] || prog[0]; if (viewDay !== null) return prog[viewDay] || prog[0]; return prog[st.rot % prog.length]; }
+function exCard(it, idx, day, logItem) {
+  const t = L(), ex = EXM[it.id], st = S().settings, pr = prescribe(ex, st), sg = suggest(ex, pr);
+  const key = `${day.di}:${idx}`, open = openEx === key, done = logItem ? logItem.sets.filter(s => s.done).length : 0, complete = logItem && done >= pr.sets;
+  let sets = '';
+  if (logItem && open) {
+    sets = `<div class="sets"><div class="sh"><span>${t.set}</span><span>${pr.cardio ? t.mins : t.kg}</span><span>${pr.cardio ? '' : pr.timed ? t.secs : t.reps}</span><span></span></div>` +
+      logItem.sets.map((s, si) => `<div class="srow ${s.done ? 'done' : ''}"><span class="sn">${pad(si + 1)}</span>
+        <input inputmode="decimal" data-a="in-w" data-i="${idx}" data-s="${si}" value="${s.w ?? ''}" placeholder="${pr.cardio ? pr.mins : (sg ? sg.next : '—')}">
+        ${pr.cardio ? '<span></span>' : `<input inputmode="numeric" data-a="in-r" data-i="${idx}" data-s="${si}" value="${s.r ?? ''}" placeholder="${pr.hi}">`}
+        <button class="ck" data-a="done-set" data-i="${idx}" data-s="${si}" aria-label="done"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></button></div>`).join('') +
+      (pr.cardio ? '' : `<div class="sact"><button class="mini" data-a="add-set" data-i="${idx}">${t.addSet}</button>${logItem.sets.length > 1 ? `<button class="mini" data-a="rm-set" data-i="${idx}">${t.rmSet}</button>` : ''}</div>`) + `</div>`;
+  }
+  const sgTxt = sg ? `<div class="sug ${sg.up ? 'up' : ''}">${t.last}: <b>${sg.w} ${t.kg}</b> × ${sg.r} ${sg.up ? `→ <b>${t.up} ${sg.next} ${t.kg}</b>` : `• ${t.keep}`}</div>` : '';
+  return `<article class="ex ${open ? 'open' : ''} ${complete ? 'complete' : ''}" id="ex-${idx}">
+    <header data-a="toggle-ex" data-v="${key}">
+      <div class="thumb">${pimg(ex)}<span class="idx">${complete ? '✓' : pad(idx + 1)}</span></div>
+      <div class="exh"><h3>${esc(nm(ex))}</h3><p>${esc(nm2(ex))}</p>
+        <div class="rx"><b dir="ltr">${pr.cardio ? pr.reps : `${pr.sets} × ${pr.reps}`}</b>${pr.rest ? `<span>${t.rest} ${pr.rest}${t.sec}</span>` : ''}${pr.note ? `<span>${pr.note}</span>` : ''}${logItem && !pr.cardio ? `<span class="prog">${done}/${pr.sets}</span>` : ''}</div></div>
+    </header>
+    ${open ? `<div class="body">${mediaBlock(ex)}${sgTxt}${sets}${howBlock(ex)}${it.slot !== 'cardio' ? `<button class="btn ghost sm" data-a="swap" data-i="${idx}">⇄ ${t.swap}</button>` : ''}</div>` : ''}
+  </article>`;
+}
+function renderToday() {
+  const t = L(), st = S(), prog = buildProgram(st.settings), day = currentDay(prog);
+  const act = st.active && st.active.di === day.di ? st.active : null;
+  const wk = st.logs.filter(l => Date.now() - l.ts < 7 * 864e5).length;
+  app().innerHTML = `
+  <header class="hero"><div class="hero-bg" style="background-image:url(gym/${day.items[0] ? day.items[0].id : 'hero0'}.jpg)"></div>
+    <div class="hero-in">
+      <div class="topbar">${LOGO}<span class="wkc">${esc(st.name)} • ${t.week} <b>${wk}/${st.settings.days}</b></span></div>
+      ${profBar()}
+      <div class="dnum"><span>${t.day}</span><b>${pad(day.di + 1)}</b></div>
+      <h1 class="disp">${t.dayT[day.key]}</h1><p class="dm">${t.dayM[day.key]}</p>
+      ${act ? `<div class="clock" id="elapsed">${fmt(Date.now() - act.t0)}</div>` : `<div class="daypick">${prog.map(p => `<button class="${p.di === day.di ? 'on' : ''}" data-a="pick-day" data-v="${p.di}">${pad(p.di + 1)}</button>`).join('')}</div>`}
+    </div></header>
+  <div class="page">
+    <div class="warm"><b>🔥</b> ${t.warm}</div>
+    <div class="list">${day.items.map((it, i) => exCard(it, i, day, act ? act.items[i] : null)).join('')}</div>
+    ${act ? `<button class="btn" data-a="finish">${t.finish}</button><button class="btn ghost danger" data-a="cancel">${t.cancel}</button>` : `<button class="btn" data-a="start" data-v="${day.di}">${t.startW}</button>`}
+  </div>${restBar()}${nav()}`;
+}
+function renderPlan() {
+  const t = L(), st = S(), prog = buildProgram(st.settings), nxt = st.rot % prog.length;
+  const goals = st.settings.goals.map(g => t.goals[g][0]).join(' + ');
+  app().innerHTML = `<div class="page">${profBar()}<h1 class="ttl">${t.planT}</h1><p class="sub">${esc(st.name)} • ${t.split[st.settings.days]} • ${goals} • ${t.levels[st.settings.level][0]}</p><p class="hint">${t.planHint}</p>
+  ${prog.map(p => `<section class="pday ${p.di === nxt ? 'next' : ''}"><div class="pdh"><span class="pn">${pad(p.di + 1)}</span><div><h3>${t.dayT[p.key]}</h3><p>${t.dayM[p.key]}</p></div>${p.di === nxt ? `<span class="tag">${t.next}</span>` : ''}</div>
+    <div class="prow">${p.items.map(it => { const e = EXM[it.id], pr = prescribe(e, st.settings); return `<div class="pi">${pimg(e)}<div><b><bdi>${esc(nm(e))}</bdi></b><span dir="ltr">${pr.cardio ? pr.reps : pr.sets + ' × ' + pr.reps}</span></div></div>`; }).join('')}</div>
+    <button class="btn sm" data-a="go-day" data-v="${p.di}">${t.open}</button></section>`).join('')}
+  <p class="note">${t.rotate}</p></div>${nav()}`;
+}
+function renderLib() {
+  const t = L(), groups = [['all', t.all], ...Object.entries(t.groups)], list = EX.filter(e => libGroup === 'all' || e.group === libGroup);
+  app().innerHTML = `<div class="page"><h1 class="ttl">${t.libT}</h1><p class="sub">${t.libSub(EX.length)}</p>
+  <div class="chips scroll">${groups.map(([k, l]) => chip(l, libGroup === k, 'lib-group', k)).join('')}</div>
+  <div class="grid">${list.map(e => `<button class="lcard" data-a="lib-open" data-v="${e.id}"><div class="lim">${pimg(e)}<img class="lp" src="demo/${e.id}_1.jpg" alt="" loading="lazy"></div><b>${esc(nm(e))}</b><span>${t.groups[e.group]}${e.seen ? ' • ' + e.seen : ''}</span></button>`).join('')}</div></div>${nav()}`;
+}
+function renderDetail(id) {
+  const t = L(), e = EXM[id], alt = EX.filter(x => x.slot === e.slot && x.id !== id);
+  app().innerHTML = `<div class="page"><button class="back" data-a="tab" data-v="lib">${isEn() ? '←' : '→'} ${t.back}</button>
+    <h1 class="ttl">${esc(nm(e))}</h1><p class="sub">${esc(nm2(e))} • ${t.groups[e.group]}</p>
+    ${mediaBlock(e)}${howBlock(e)}
+    ${alt.length ? `<h4 class="alt">${t.alts}</h4><div class="chips">${alt.map(a => chip(esc(nm(a)), false, 'lib-open', a.id)).join('')}</div>` : ''}
+  </div>${nav()}`;
+}
+function renderProg() {
+  const t = L(), st = S(), wk = st.logs.filter(l => Date.now() - l.ts < 7 * 864e5).length;
+  const vol = l => l.items.reduce((a, it) => a + it.sets.filter(s => s.done).reduce((b, s) => b + (+s.w || 0) * (+s.r || 0), 0), 0);
+  const best = {};
+  for (const l of st.logs) for (const it of l.items) for (const s of it.sets) if (s.done && +s.w && !EXM[it.id].cardio) best[it.id] = Math.max(best[it.id] || 0, +s.w);
+  const line = (pts, cls) => { if (pts.length < 2) return '<span></span>'; const mx = Math.max(...pts), mn = Math.min(...pts), r = mx - mn || 1; return `<svg viewBox="0 0 100 30" preserveAspectRatio="none" class="${cls}"><polyline points="${pts.map((p, i) => `${i / (pts.length - 1) * 100},${27 - (p - mn) / r * 24}`).join(' ')}"/></svg>`; };
+  const spark = id => line(history(id).map(h => Math.max(...h.sets.map(s => +s.w || 0))), 'spark');
+  const fmtD = ts => new Date(ts).toLocaleDateString(isEn() ? 'en-GB' : 'ar-EG', { weekday: 'short', day: 'numeric', month: 'short' });
+  const W = st.weights || [], lastW = W.length ? W[W.length - 1].kg : null, tgt = st.settings.target;
+  let wInfo = '';
+  if (lastW != null) {
+    const ch = Math.round((lastW - W[0].kg) * 10) / 10;
+    wInfo = `<div class="bwnow"><b>${lastW}<small>${t.kg}</small></b><span>${W.length > 1 ? t.bwChange(ch) : ''}</span>${tgt ? `<em>${(G(st.settings).l ? lastW <= tgt : lastW >= tgt) ? t.bwDone : t.bwLeft(Math.round(Math.abs(lastW - tgt) * 10) / 10)}</em>` : ''}</div>${line(W.map(w => w.kg), 'bwline')}`;
+  }
+  app().innerHTML = `<div class="page">${profBar()}<h1 class="ttl">${t.progT}</h1><p class="sub">${esc(st.name)}</p>
+    <div class="stats"><div><b>${st.logs.length}</b><span>${t.total}</span></div><div><b>${wk}<small>/${st.settings.days}</small></b><span>${t.thisWeek}</span></div><div><b>${Object.keys(best).length}</b><span>${t.logged}</span></div></div>
+    <h2 class="sec">${t.bw}</h2><div class="bw">${wInfo}<div class="bwin"><input id="bwin" class="tin" inputmode="decimal" placeholder="${t.bwPh}"><button class="btn sm" data-a="bw-add">${t.bwAdd}</button></div></div>
+    <h2 class="sec">${t.best}</h2>
+    ${Object.keys(best).length ? `<div class="prs">${Object.entries(best).map(([id, w]) => `<div class="pr">${pimg(EXM[id])}<span>${esc(nm(EXM[id]))}</span>${spark(id)}<b>${w}<small>${t.kg}</small></b></div>`).join('')}</div>` : `<p class="empty">${t.empty}</p>`}
+    <h2 class="sec">${t.recent}</h2>
+    ${st.logs.slice().reverse().slice(0, 20).map(l => `<div class="logi"><div><b>${t.dayT[l.key] || ''}</b><span>${fmtD(l.ts)} • ${l.dur} ${t.min}</span></div><em>${Math.round(vol(l)).toLocaleString(isEn() ? 'en' : 'ar-EG')} ${t.kg}</em></div>`).join('') || `<p class="empty">—</p>`}
+  </div>${nav()}`;
+}
+
+// ================= rest timer =================
+let rest = null;
+const fmt = ms => { const m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60; return `${pad(m)}:${pad(s)}`; };
+function restBar() {
+  if (!rest) return '<div id="rest"></div>';
+  const t = L(), left = Math.max(0, Math.ceil((rest.end - Date.now()) / 1000)), p = left / rest.total;
+  return `<div id="rest" class="show"><svg viewBox="0 0 44 44" class="ring"><circle cx="22" cy="22" r="19"/><circle cx="22" cy="22" r="19" class="fg" style="stroke-dashoffset:${(1 - p) * 119.4}"/></svg><div class="rl"><span>${t.rest}</span><b>${left}${t.sec}</b></div><button data-a="rest-add">+15</button><button data-a="rest-skip">${t.skip}</button></div>`;
+}
+function startRest(s) { if (!s) return; rest = { end: Date.now() + s * 1000, total: s }; const el = $('#rest'); if (el) el.outerHTML = restBar(); }
+function beep() { try { navigator.vibrate && navigator.vibrate([250, 100, 250]); } catch (e) { } try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.type = 'square'; o.frequency.value = 660; g.gain.value = .08; o.start(); o.stop(c.currentTime + .4); } catch (e) { } }
+setInterval(() => {
+  if (rest) { if (Date.now() >= rest.end) { rest = null; beep(); } const el = $('#rest'); if (el) el.outerHTML = restBar(); }
+  const el = $('#elapsed'), st = S(); if (el && st && st.active) el.textContent = fmt(Date.now() - st.active.t0);
+}, 500);
+
+// ================= dialogs =================
+function ask(msg, yes, no) {
+  return new Promise(res => {
+    const d = document.createElement('div'); d.className = 'sheet dlg';
+    d.innerHTML = `<div class="sheet-in"><p class="dmsg"></p><div class="dbtns">${no ? `<button class="btn ghost" data-k="0">${no}</button>` : ''}<button class="btn" data-k="1">${yes}</button></div></div>`;
+    d.querySelector('.dmsg').textContent = msg;
+    d.addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b && e.target !== d) return; e.stopPropagation(); d.remove(); res(!!b && b.dataset.k === '1'); });
+    document.body.appendChild(d);
+  });
+}
+function toast(m) { const x = document.createElement('div'); x.className = 'toast'; x.textContent = m; document.body.appendChild(x); setTimeout(() => x.remove(), 2600); }
+function swapSheet(idx) {
+  const t = L(), st = S(), day = currentDay(buildProgram(st.settings)), it = day.items[idx], cur = EXM[it.id];
+  const c = candidates(it.slot, st.settings), others = EX.filter(e => e.slot === it.slot && !c.includes(e));
+  const d = document.createElement('div'); d.className = 'sheet';
+  d.innerHTML = `<div class="sheet-in"><h3>${esc(t.swapT(nm(cur)))}</h3>${c.map(e => `<button class="swapi ${e.id === cur.id ? 'on' : ''}" data-a="do-swap" data-v="${e.id}" data-i="${idx}">${pimg(e)}<img src="demo/${e.id}_0.jpg" alt=""><div><b>${esc(nm(e))}</b><span>${esc(nm2(e))}</span></div></button>`).join('')}
+    ${others.length ? `<p class="hint">${t.notAvail} ${others.map(o => esc(nm(o))).join('، ')}</p>` : ''}<button class="btn ghost" data-a="close-sheet">${t.close}</button></div>`;
+  document.body.appendChild(d);
+}
+
+// ================= root =================
+function render() {
+  applyLang(); const r = R();
+  if (!r.profiles.length) return renderSettings('first');
+  if (tab === 'new') return renderSettings('new');
+  if (tab === 'today') renderToday(); else if (tab === 'plan') renderPlan(); else if (tab === 'lib') renderLib(); else if (tab === 'prog') renderProg(); else if (tab === 'set') renderSettings('edit'); else if (tab.startsWith('ex:')) renderDetail(tab.slice(3));
+}
+function newSession(di) {
+  const st = S(), day = buildProgram(st.settings)[di];
+  st.active = { di, t0: Date.now(), items: day.items.map(it => { const ex = EXM[it.id], pr = prescribe(ex, st.settings), sg = suggest(ex, pr); return { id: it.id, sets: Array.from({ length: pr.sets }, () => ({ w: sg ? sg.next : null, r: null, done: false })) }; }) };
+  openEx = `${di}:0`; save();
+}
+const top = () => window.scrollTo(0, 0);
+const scrollToEx = i => { const el = document.getElementById('ex-' + i); el && el.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
+
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-a]');
+  if (!b) { if (ev.target.classList && ev.target.classList.contains('sheet') && !ev.target.classList.contains('dlg')) ev.target.remove(); return; }
+  const a = b.dataset.a, v = b.dataset.v, r = R(), st = S(), t = L();
+  if (a.startsWith('in-')) return;
+  if (a.startsWith('set-') || a === 'save-settings' || a === 'lang') syncDraftInputs();
+  switch (a) {
+    case 'tab': tab = v; viewDay = null; draft = null; render(); top(); break;
+    case 'lang': r.lang = v; save(); render(); break;
+    case 'prof': if (st && st.active && +v !== r.cur) { /* keep running workout per profile */ } r.cur = +v; viewDay = null; openEx = null; rest = null; draft = null; save(); render(); break;
+    case 'add-prof': draft = null; tab = 'new'; render(); top(); break;
+    case 'del-prof': if (await ask(t.qDel(st.name), t.delP, t.no)) { r.profiles.splice(r.cur, 1); r.cur = 0; save(); draft = null; tab = 'today'; render(); } break;
+    case 'set-goal': { const g = draft.goals; if (g.includes(v)) { if (g.length > 1) draft.goals = g.filter(x => x !== v); } else { draft.goals = [...g, v].slice(-2); } if (draft.goals.includes('loss') || draft.goals.includes('fit')) draft.cardio = true; render(); break; }
+    case 'set-level': draft.level = v; render(); break;
+    case 'set-days': draft.days = +v; render(); break;
+    case 'set-len': draft.len = +v; render(); break;
+    case 'set-inj': draft.inj = draft.inj.includes(v) ? draft.inj.filter(x => x !== v) : [...draft.inj, v]; render(); break;
+    case 'set-cardio': draft.cardio = v === '1'; render(); break;
+    case 'save-settings': {
+      const name = (draft.name || '').trim(); if (!name) { ask(t.needName, t.ok); break; }
+      const { name: _, ...settings } = draft;
+      if (v === 'edit') { const old = st.settings; st.name = name; st.settings = settings; if (old.days !== settings.days) { st.rot = 0; st.swaps = {}; st.active = null; } }
+      else { const p = newProfile(name); p.settings = settings; r.profiles.push(p); r.cur = r.profiles.length - 1; }
+      draft = null; save(); tab = 'today'; render(); top(); break;
+    }
+    case 'reset': if (await ask(t.qReset, t.reset, t.no)) { const p = newProfile(st.name); p.id = st.id; p.settings = st.settings; r.profiles[r.cur] = p; save(); draft = null; tab = 'today'; render(); } break;
+    case 'pick-day': viewDay = +v; openEx = null; render(); break;
+    case 'go-day': if (st.active && st.active.di !== +v) { ask(t.qBusy, t.ok); break; } viewDay = +v; tab = 'today'; render(); top(); break;
+    case 'toggle-ex': openEx = openEx === v ? null : v; mediaTab = 'vid'; render(); if (openEx) scrollToEx(v.split(':')[1]); break;
+    case 'mtab': { mediaTab = v; const m = b.closest('.media'); m.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); m.querySelectorAll('.mt').forEach(x => x.hidden = !x.classList.contains('mt-' + v)); break; }
+    case 'start': newSession(+v); render(); scrollToEx(0); break;
+    case 'done-set': {
+      const i = +b.dataset.i, si = +b.dataset.s, it = st.active.items[i], s = it.sets[si], ex = EXM[it.id], pr = prescribe(ex, st.settings);
+      if (!s.done) {
+        if (s.w == null || s.w === '') { const inp = document.querySelector(`[data-a="in-w"][data-i="${i}"][data-s="${si}"]`); if (inp && inp.placeholder !== '—') s.w = +inp.placeholder; }
+        if (!pr.cardio && (s.r == null || s.r === '')) s.r = pr.hi;
+        s.done = true; if (it.sets[si + 1] && it.sets[si + 1].w == null) it.sets[si + 1].w = s.w; save();
+        const all = it.sets.every(x => x.done); if (all && st.active.items[i + 1]) { openEx = `${st.active.di}:${i + 1}`; mediaTab = 'vid'; }
+        render(); startRest(all ? Math.min(pr.rest, 90) : pr.rest); if (all) scrollToEx(i + 1);
+      } else { s.done = false; save(); render(); }
+      break;
+    }
+    case 'add-set': st.active.items[+b.dataset.i].sets.push({ w: null, r: null, done: false }); save(); render(); break;
+    case 'rm-set': st.active.items[+b.dataset.i].sets.pop(); save(); render(); break;
+    case 'finish': {
+      const A = st.active, day = buildProgram(st.settings)[A.di], n = A.items.reduce((k, it) => k + it.sets.filter(s => s.done).length, 0);
+      if (!n && !(await ask(t.qEmpty, t.finish, t.no))) break;
+      st.logs.push({ ts: Date.now(), di: A.di, key: day.key, dur: Math.round((Date.now() - A.t0) / 60000), items: A.items });
+      st.rot = A.di + 1; st.active = null; viewDay = null; openEx = null; rest = null; save(); tab = 'prog'; render(); top(); setTimeout(() => toast(t.toast), 50); break;
+    }
+    case 'cancel': if (await ask(t.qCancel, t.cancel, t.no)) { st.active = null; rest = null; save(); render(); } break;
+    case 'swap': swapSheet(+b.dataset.i); break;
+    case 'do-swap': {
+      const day = currentDay(buildProgram(st.settings)), i = +b.dataset.i, it = day.items[i];
+      st.swaps[`${day.di}:${it.si}`] = v;
+      if (st.active && st.active.di === day.di) { const pr = prescribe(EXM[v], st.settings); st.active.items[i] = { id: v, sets: Array.from({ length: pr.sets }, () => ({ w: null, r: null, done: false })) }; }
+      save(); document.querySelector('.sheet')?.remove(); render(); break;
+    }
+    case 'play': { const t0 = b.dataset.t | 0; const f = document.createElement('div'); f.className = 'vframe'; f.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${v}?start=${t0}&autoplay=1&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`; b.replaceWith(f); break; }
+    case 'close-sheet': document.querySelector('.sheet')?.remove(); break;
+    case 'lib-group': libGroup = v; render(); break;
+    case 'lib-open': document.querySelector('.sheet')?.remove(); mediaTab = 'vid'; tab = 'ex:' + v; render(); top(); break;
+    case 'rest-add': if (rest) { rest.end += 15000; rest.total += 15; } break;
+    case 'rest-skip': rest = null; $('#rest').outerHTML = restBar(); break;
+    case 'bw-add': { const x = $('#bwin'); const kg = +String(x.value).replace(',', '.').replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))); if (!kg || kg < 25 || kg > 300) break; st.weights = st.weights || []; st.weights.push({ ts: Date.now(), kg }); save(); render(); break; }
+  }
+});
+document.addEventListener('input', ev => {
+  const x = ev.target; if (!x.dataset || !x.dataset.a || !S() || !S().active) return;
+  const s = S().active.items[+x.dataset.i].sets[+x.dataset.s];
+  const val = x.value.replace(',', '.').replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+  if (x.dataset.a === 'in-w') s.w = val === '' ? null : +val; else s.r = val === '' ? null : +val; save();
+});
+render();
+}
+
+</script>
+</body>
+</html>
